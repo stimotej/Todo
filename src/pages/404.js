@@ -1,54 +1,60 @@
-import * as React from "react"
-import { Link } from "gatsby"
+import React from "react";
+import { Link } from "gatsby";
+import styled, { createGlobalStyle } from "styled-components";
 
-// styles
-const pageStyles = {
-  color: "#232129",
-  padding: "96px",
-  fontFamily: "-apple-system, Roboto, sans-serif, serif",
-}
-const headingStyles = {
-  marginTop: 0,
-  marginBottom: 64,
-  maxWidth: 320,
-}
-
-const paragraphStyles = {
-  marginBottom: 48,
-}
-const codeStyles = {
-  color: "#8A6534",
-  padding: 4,
-  backgroundColor: "#FFF4DB",
-  fontSize: "1.25rem",
-  borderRadius: 4,
-}
-
-// markup
 const NotFoundPage = () => {
   return (
-    <main style={pageStyles}>
-      <title>Not found</title>
-      <h1 style={headingStyles}>Page not found</h1>
-      <p style={paragraphStyles}>
-        Sorry{" "}
-        <span role="img" aria-label="Pensive emoji">
-          😔
-        </span>{" "}
-        we couldn’t find what you were looking for.
-        <br />
-        {process.env.NODE_ENV === "development" ? (
-          <>
-            <br />
-            Try creating a page in <code style={codeStyles}>src/pages/</code>.
-            <br />
-          </>
-        ) : null}
-        <br />
-        <Link to="/">Go home</Link>.
-      </p>
-    </main>
-  )
-}
+    <MainContainer>
+      <GlobalStyle />
+      <Title>Page not found :(</Title>
+      <TodoLink to="/">Open todo</TodoLink>
+    </MainContainer>
+  );
+};
 
-export default NotFoundPage
+const GlobalStyle = createGlobalStyle`
+  * {
+    background: #F5F5F5;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-size:100%
+  }
+`;
+
+const MainContainer = styled.main`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+`;
+
+const Title = styled.h1`
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 60px;
+`;
+
+const TodoLink = styled((props) => <Link {...props} />)`
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 16px 24px;
+  border-radius: 30px;
+  text-transform: uppercase;
+  letter-spacing: 1.25px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background-color: #212121;
+  }
+`;
+
+export default NotFoundPage;

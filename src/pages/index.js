@@ -54,7 +54,7 @@ const IndexPage = () => {
   };
 
   const getCurrentDate = () => {
-    let d = new window.Date();
+    let d = new Date();
     let day = d.getDate();
     let month = d.getMonth() + 1;
     let year = d.getFullYear();
@@ -68,7 +68,7 @@ const IndexPage = () => {
       <Container>
         <TitleContainer>
           <Title>todo</Title>
-          <Date>{getCurrentDate()}</Date>
+          <TextDate>{getCurrentDate()}</TextDate>
         </TitleContainer>
         <TaskList>
           {taskList.length === 0 ? (
@@ -143,7 +143,7 @@ const Title = styled.h1`
   margin-bottom: 10px;
 `;
 
-const Date = styled.h3`
+const TextDate = styled.h3`
   font-size: 1.125rem;
   font-weight: 300;
 `;

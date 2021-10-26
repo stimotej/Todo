@@ -6,6 +6,7 @@ import {
   getTaskListFromDB,
   addTaskToDB,
   deleteTasksFromDb,
+  editTaskInDb,
 } from "../data/indexedDB";
 
 const IndexPage = () => {
@@ -16,7 +17,8 @@ const IndexPage = () => {
   const [timeoutId, setTimeoutId] = useState("");
 
   useEffect(() => {
-    "indexedDB" in window && alert("Todo app is not supported in this browser");
+    !("indexedDB" in window) &&
+      alert("Todo app is not supported in this browser");
     getTaskListFromDB(setTaskList);
   }, []);
 
@@ -28,15 +30,36 @@ const IndexPage = () => {
 
   const handleSetTaskDone = (id) => {
     let taskDoneListCopy = [...taskDoneList];
-    taskDoneListCopy.push(id);
-    if (timeoutId) clearTimeout(timeoutId);
-    let tID = setTimeout(() => {
-      deleteTasksFromDb(taskList, setTaskList, taskDoneListCopy);
-      setTaskDoneList([]);
-      setTimeoutId(null);
-    }, 3000);
+    if (!taskDoneList.includes(id)) taskDoneListCopy.push(id);
+    else {
+      let index = taskDoneListCopy.findIndex((taskDone) => taskDone === id);
+      taskDoneListCopy.splice(index, 1);
+    }
+
+    timeoutId && clearTimeout(timeoutId);
+    let tID =
+      taskDoneListCopy.length === 0
+        ? null
+        : setTimeout(() => {
+            deleteTasksFromDb(taskList, setTaskList, taskDoneListCopy);
+            setTaskDoneList([]);
+            setTimeoutId(null);
+          }, 3000);
     setTimeoutId(tID);
     setTaskDoneList(taskDoneListCopy);
+  };
+
+  const handleEditTask = (e, id) => {
+    editTaskInDb(taskList, setTaskList, id, e.target.value);
+  };
+
+  const getCurrentDate = () => {
+    let d = new window.Date();
+    let day = d.getDate();
+    let month = d.getMonth() + 1;
+    let year = d.getFullYear();
+
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -45,7 +68,7 @@ const IndexPage = () => {
       <Container>
         <TitleContainer>
           <Title>todo</Title>
-          <Date>24/10/2021</Date>
+          <Date>{getCurrentDate()}</Date>
         </TitleContainer>
         <TaskList>
           {taskList.length === 0 ? (
@@ -56,8 +79,8 @@ const IndexPage = () => {
                 text={item.text}
                 key={item.id}
                 onClick={() => handleSetTaskDone(item.id)}
+                onBlur={(e) => handleEditTask(e, item.id)}
                 done={taskDoneList.includes(item.id)}
-                disabled={taskDoneList.includes(item.id)}
               />
             ))
           )}

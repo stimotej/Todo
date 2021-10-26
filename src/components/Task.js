@@ -1,14 +1,32 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
-const Task = ({ text, onClick, done, disabled }) => {
+const Task = ({ text, onClick, onBlur, done }) => {
+  const [editTask, setEditTask] = useState(false);
+
+  const handleOnBlur = (e) => {
+    setEditTask(false);
+    onBlur(e);
+  };
+
   return (
     <TaskContainer>
-      <CheckboxContainer onClick={onClick} disabled={disabled}>
+      <CheckboxContainer onClick={onClick}>
         <Checkbox done={done} />
       </CheckboxContainer>
       <TextContainer>
-        <Text done={done}>{text}</Text>
+        {editTask ? (
+          <TextInput
+            type="text"
+            autoFocus={editTask}
+            defaultValue={text}
+            onBlur={(e) => handleOnBlur(e)}
+          />
+        ) : (
+          <Text done={done} onClick={() => setEditTask(true)}>
+            {text}
+          </Text>
+        )}
       </TextContainer>
     </TaskContainer>
   );
@@ -45,6 +63,18 @@ const TextContainer = styled.div`
   width: 100%;
   padding: 20px 0 20px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+`;
+
+const TextInput = styled.input`
+  width: 100%;
+  font-size: 1.125rem;
+  font-weight: 400;
+  border: none;
+  outline: none;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 const Text = styled.p`

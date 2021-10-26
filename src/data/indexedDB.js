@@ -29,9 +29,24 @@ export const deleteTasksFromDb = (taskList, setTaskList, taskDoneList) => {
     .then(() => {
       let taskListCopy = [...taskList];
       taskDoneList.forEach((id) => {
-        var index = taskListCopy.findIndex((task) => task.id === id);
+        let index = taskListCopy.findIndex((task) => task.id === id);
         taskListCopy.splice(index, 1);
       });
+      setTaskList(taskListCopy);
+    });
+};
+
+export const editTaskInDb = (taskList, setTaskList, id, text) => {
+  const editedTask = {
+    text,
+    date: new Date().getTime(),
+  };
+  db.table("tasks")
+    .update(id, editedTask)
+    .then(() => {
+      let taskListCopy = [...taskList];
+      let index = taskListCopy.findIndex((task) => task.id === id);
+      taskListCopy[index] = Object.assign({}, editedTask, { id });
       setTaskList(taskListCopy);
     });
 };

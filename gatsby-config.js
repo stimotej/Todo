@@ -1,7 +1,10 @@
 module.exports = {
   siteMetadata: {
-    siteUrl: "https://www.yourdomain.tld",
     title: "Todo",
+    description: "Todo app",
+    author: "Timotej Sofijanović",
+    image: "src/images/todo_maskable_icon_x512.png",
+    siteUrl: "https://todo-minimal-pwa.netlify.app/",
   },
   plugins: [
     "gatsby-plugin-styled-components",
@@ -10,15 +13,29 @@ module.exports = {
     {
       resolve: "gatsby-plugin-manifest",
       options: {
-        icon: "src/images/icon.png",
+        icon: "src/images/todo_maskable_icon_x512.png",
         name: `Todo`,
         short_name: `Todo`,
         start_url: `/`,
         background_color: `#F5F5F5`,
         theme_color: `#000000`,
         display: `standalone`,
+        include_favicon: false,
       },
     },
     `gatsby-plugin-offline`,
+    {
+      resolve: `gatsby-plugin-webfonts`,
+      options: {
+        fonts: {
+          google: [
+            {
+              family: "Open Sans",
+              variants: ["300", "400", "500"],
+            },
+          ],
+        },
+      },
+    },
   ],
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
+import Seo from "../components/SEO";
 import Task from "../components/Task";
 
 import {
@@ -20,11 +21,17 @@ const IndexPage = () => {
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
     getTaskListFromDB(setTaskList);
+
+    let addTaskBtn = document.getElementById("add-task-btn");
+    let addTaskInput = document.getElementById("add-task-input");
+
+    addTaskInput.style.paddingRight = `${addTaskBtn.offsetWidth + 10}px`;
+    addTaskInput.style.height = `${addTaskBtn.offsetHeight}px`;
   }, []);
 
   const handleAddTask = (e) => {
     e.preventDefault();
-    addTaskToDB(taskList, setTaskList, task);
+    task && addTaskToDB(taskList, setTaskList, task);
     setTask("");
   };
 
@@ -50,7 +57,9 @@ const IndexPage = () => {
   };
 
   const handleEditTask = (e, id) => {
-    editTaskInDb(taskList, setTaskList, id, e.target.value);
+    if (e.target.value === "" || !e.target.value.trim())
+      deleteTasksFromDb(taskList, setTaskList, [id]);
+    else editTaskInDb(taskList, setTaskList, id, e.target.value);
   };
 
   const getCurrentDate = () => {
@@ -64,6 +73,7 @@ const IndexPage = () => {
 
   return (
     <MainContainer>
+      <Seo title="Todo" />
       <GlobalStyle />
       <Container>
         <TitleContainer>
@@ -89,12 +99,16 @@ const IndexPage = () => {
           <TextInput
             type="text"
             placeholder="Write your task"
+            id="add-task-input"
             value={task}
             onChange={(e) => {
               setTask(e.target.value);
             }}
+            required
           />
-          <AddButton type="submit">Add</AddButton>
+          <AddButton type="submit" id="add-task-btn">
+            Add
+          </AddButton>
         </AddTaskContainer>
       </Container>
     </MainContainer>
@@ -104,7 +118,7 @@ const IndexPage = () => {
 const GlobalStyle = createGlobalStyle`
   * {
     background: #F5F5F5;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -181,6 +195,7 @@ const TextInput = styled.input`
   border: none;
   background-color: white;
   padding: 16px 24px;
+  font-size: 1rem;
 `;
 
 const AddButton = styled.button`

@@ -19,8 +19,23 @@ export const addTaskToDB = (taskList, setTaskList, text) => {
   db.table("tasks")
     .add(task)
     .then((id) => {
-      setTaskList([...taskList, Object.assign({}, task, { id })]);
+      setTaskList([...taskList, { id, ...task }]);
     });
+};
+
+export const reorderTasksInDb = (taskList) => {
+  db.table("tasks")
+    .bulkPut(taskList)
+    .then((lastKey) => {
+      // console.log(lastKey);
+    })
+    .catch((e) => {
+      console.log(e);
+    });
+};
+
+export const deleteTasksFromDbgg = (taskDoneList) => {
+  db.table("tasks").bulkDelete(taskDoneList);
 };
 
 export const deleteTasksFromDb = (taskList, setTaskList, taskDoneList) => {
@@ -28,10 +43,12 @@ export const deleteTasksFromDb = (taskList, setTaskList, taskDoneList) => {
     .bulkDelete(taskDoneList)
     .then(() => {
       let taskListCopy = [...taskList];
+
       taskDoneList.forEach((id) => {
         let index = taskListCopy.findIndex((task) => task.id === id);
         taskListCopy.splice(index, 1);
       });
+
       setTaskList(taskListCopy);
     });
 };
@@ -46,7 +63,7 @@ export const editTaskInDb = (taskList, setTaskList, id, text) => {
     .then(() => {
       let taskListCopy = [...taskList];
       let index = taskListCopy.findIndex((task) => task.id === id);
-      taskListCopy[index] = Object.assign({}, editedTask, { id });
+      taskListCopy[index] = { id, ...editedTask };
       setTaskList(taskListCopy);
     });
 };

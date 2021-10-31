@@ -14,7 +14,7 @@ const NotFoundPage = () => {
 
 const GlobalStyle = createGlobalStyle`
   * {
-    background: #F5F5F5;
+    background-color: #F5F5F5;
     font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;

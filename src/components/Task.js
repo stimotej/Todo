@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useCallback } from "react";
 import styled from "styled-components";
+import { MdDragHandle } from "react-icons/md";
 
-const Task = ({ text, onClick, onBlur, done }) => {
-  useEffect(() => {
-    let textarea = document.getElementById("text-input");
-    textareaAutoHeight(textarea);
+const Task = ({ text, dragHandleProps, onClick, onBlur, done }) => {
+  const taskInput = useCallback((node) => {
+    if (node !== null) {
+      textareaAutoHeight(node);
+    }
   }, []);
 
   const handleOnBlur = (e) => {
@@ -25,6 +27,7 @@ const Task = ({ text, onClick, onBlur, done }) => {
         <TextInput
           id="text-input"
           rows="1"
+          ref={taskInput}
           defaultValue={text}
           spellCheck="false"
           done={done}
@@ -39,6 +42,9 @@ const Task = ({ text, onClick, onBlur, done }) => {
           onChange={(e) => textareaAutoHeight(e.target)}
           onBlur={(e) => handleOnBlur(e)}
         />
+        <DragHandle {...dragHandleProps}>
+          <MdDragHandle />
+        </DragHandle>
       </TextContainer>
     </TaskContainer>
   );
@@ -57,10 +63,6 @@ const CheckboxContainer = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-
-  &:hover {
-    background-color: #eeeeee;
-  }
 `;
 
 const Checkbox = styled.div`
@@ -77,6 +79,8 @@ const TextContainer = styled.div`
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   overflow: hidden;
   box-sizing: border-box;
+  user-select: none;
+  display: flex;
 `;
 
 const TextInput = styled.textarea`
@@ -87,10 +91,23 @@ const TextInput = styled.textarea`
   outline: none;
   resize: none;
   overflow: hidden;
+  user-select: none;
   text-decoration: ${({ done }) => (done ? "line-through" : "none")};
 
   &:focus {
     outline: none;
+    user-select: auto;
+  }
+`;
+
+const DragHandle = styled.div`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
   }
 `;
 

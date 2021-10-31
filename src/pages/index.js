@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { useMediaQuery } from "react-responsive";
+import { useBeforeunload } from "react-beforeunload";
 import Seo from "../components/SEO";
 import Task from "../components/Task";
 
@@ -8,6 +11,8 @@ import {
   addTaskToDB,
   deleteTasksFromDb,
   editTaskInDb,
+  reorderTasksInDb,
+  deleteTasksFromDbgg,
 } from "../data/indexedDB";
 
 const IndexPage = () => {
@@ -15,7 +20,13 @@ const IndexPage = () => {
   const [taskDoneList, setTaskDoneList] = useState([]);
   const [taskList, setTaskList] = useState([]);
 
+  // taskList ref for getting current value of state inside setTimeout
+  const taskListRef = useRef(taskList);
+  taskListRef.current = taskList;
+
   const [timeoutId, setTimeoutId] = useState("");
+
+  const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
 
   useEffect(() => {
     !("indexedDB" in window) &&
@@ -29,9 +40,16 @@ const IndexPage = () => {
     addTaskInput.style.height = `${addTaskBtn.offsetHeight}px`;
   }, []);
 
+  useBeforeunload(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      deleteTasksFromDbgg(taskDoneList);
+    }
+  });
+
   const handleAddTask = (e) => {
     e.preventDefault();
-    task && addTaskToDB(taskList, setTaskList, task);
+    if (task && task.trim()) addTaskToDB(taskList, setTaskList, task.trim());
     setTask("");
   };
 
@@ -48,7 +66,11 @@ const IndexPage = () => {
       taskDoneListCopy.length === 0
         ? null
         : setTimeout(() => {
-            deleteTasksFromDb(taskList, setTaskList, taskDoneListCopy);
+            deleteTasksFromDb(
+              taskListRef.current,
+              setTaskList,
+              taskDoneListCopy
+            );
             setTaskDoneList([]);
             setTimeoutId(null);
           }, 3000);
@@ -71,6 +93,22 @@ const IndexPage = () => {
     return `${day}/${month}/${year}`;
   };
 
+  const handleOnDragEnd = (result) => {
+    if (!result.destination) return;
+
+    let taskListCopy = [...taskList];
+
+    let [reorderedTask] = taskListCopy.splice(result.source.index, 1);
+    taskListCopy.splice(result.destination.index, 0, reorderedTask);
+
+    let idList = taskListCopy.map((item) => item.id);
+    idList.sort((a, b) => a - b);
+    taskListCopy.forEach((item, index) => (item.id = idList[index]));
+
+    setTaskList(taskListCopy);
+    reorderTasksInDb(taskListCopy);
+  };
+
   return (
     <MainContainer>
       <Seo title="Todo" />
@@ -80,26 +118,48 @@ const IndexPage = () => {
           <Title>todo</Title>
           <TextDate>{getCurrentDate()}</TextDate>
         </TitleContainer>
-        <TaskList>
-          {taskList.length === 0 ? (
-            <TaskListEmptyText>No tasks yet :(</TaskListEmptyText>
-          ) : (
-            taskList.map((item) => (
-              <Task
-                text={item.text}
-                key={item.id}
-                onClick={() => handleSetTaskDone(item.id)}
-                onBlur={(e) => handleEditTask(e, item.id)}
-                done={taskDoneList.includes(item.id)}
-              />
-            ))
-          )}
-        </TaskList>
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+          <Droppable droppableId="tasks-droppable">
+            {(provided) => (
+              <TaskList {...provided.droppableProps} ref={provided.innerRef}>
+                {taskList.length === 0 ? (
+                  <TaskListEmptyText>No tasks yet :(</TaskListEmptyText>
+                ) : (
+                  taskList.map((item, index) => (
+                    <Draggable
+                      key={item.date}
+                      draggableId={item.date.toString()}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          {...provided.draggableProps}
+                          {...(!isDesktop && provided.dragHandleProps)}
+                          ref={provided.innerRef}
+                        >
+                          <Task
+                            text={item.text}
+                            dragHandleProps={provided.dragHandleProps}
+                            onClick={() => handleSetTaskDone(item.id)}
+                            onBlur={(e) => handleEditTask(e, item.id)}
+                            done={taskDoneList.includes(item.id)}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))
+                )}
+                {provided.placeholder}
+              </TaskList>
+            )}
+          </Droppable>
+        </DragDropContext>
         <AddTaskContainer onSubmit={handleAddTask}>
           <TextInput
             type="text"
             placeholder="Write your task"
             id="add-task-input"
+            autocomplete="off"
             value={task}
             onChange={(e) => {
               setTask(e.target.value);
@@ -117,13 +177,14 @@ const IndexPage = () => {
 
 const GlobalStyle = createGlobalStyle`
   * {
-    background: #F5F5F5;
+    background-color: #F5F5F5;
     font-family: 'Open Sans', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    font-size:100%
+    font-size:100%;
+    outline: none;
   }
 `;
 

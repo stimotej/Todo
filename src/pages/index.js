@@ -24,6 +24,10 @@ const IndexPage = () => {
   const taskListRef = useRef(taskList);
   taskListRef.current = taskList;
 
+  // taskDoneList ref for getting current value of state inside setTimeout
+  const taskDoneListRef = useRef(taskDoneList);
+  taskDoneListRef.current = taskDoneList;
+
   const [timeoutId, setTimeoutId] = useState("");
 
   const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
@@ -55,13 +59,18 @@ const IndexPage = () => {
 
   const handleSetTaskDone = (id) => {
     let taskDoneListCopy = [...taskDoneList];
+
+    // If checked id doesn't exist in taskDoneList add it otherwise delete it
     if (!taskDoneList.includes(id)) taskDoneListCopy.push(id);
     else {
       let index = taskDoneListCopy.findIndex((taskDone) => taskDone === id);
       taskDoneListCopy.splice(index, 1);
     }
 
+    // If timeout is already running clear it
     timeoutId && clearTimeout(timeoutId);
+
+    // Start timeout and after 3s delete selected tasks
     let tID =
       taskDoneListCopy.length === 0
         ? null
@@ -69,7 +78,7 @@ const IndexPage = () => {
             deleteTasksFromDb(
               taskListRef.current,
               setTaskList,
-              taskDoneListCopy
+              taskDoneListRef.current
             );
             setTaskDoneList([]);
             setTimeoutId(null);
@@ -98,12 +107,29 @@ const IndexPage = () => {
 
     let taskListCopy = [...taskList];
 
+    // Move item to destination index
     let [reorderedTask] = taskListCopy.splice(result.source.index, 1);
     taskListCopy.splice(result.destination.index, 0, reorderedTask);
 
+    // Get indexes of completed tasks when list is reordered
+    let taskDoneListIndexes =
+      timeoutId &&
+      taskDoneList.map((taskDoneId) =>
+        taskListCopy.findIndex((task) => task.id === taskDoneId)
+      );
+
+    // Sort IDs to keep items sorted in db
     let idList = taskListCopy.map((item) => item.id);
     idList.sort((a, b) => a - b);
     taskListCopy.forEach((item, index) => (item.id = idList[index]));
+
+    // Store new taskList IDs to taskDoneList
+    if (timeoutId) {
+      const newTaskDoneList = taskDoneListIndexes.map(
+        (item) => taskListCopy[item].id
+      );
+      setTaskDoneList(newTaskDoneList);
+    }
 
     setTaskList(taskListCopy);
     reorderTasksInDb(taskListCopy);

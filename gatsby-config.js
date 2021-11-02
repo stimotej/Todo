@@ -20,7 +20,6 @@ module.exports = {
         background_color: `#F5F5F5`,
         theme_color: `#000000`,
         display: `standalone`,
-        include_favicon: false,
       },
     },
     `gatsby-plugin-offline`,

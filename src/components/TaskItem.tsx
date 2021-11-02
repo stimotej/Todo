@@ -2,18 +2,22 @@ import React, { useCallback } from "react";
 import styled from "styled-components";
 import { MdDragHandle } from "react-icons/md";
 
-const Task = ({ text, dragHandleProps, onClick, onBlur, done }) => {
-  const taskInput = useCallback((node) => {
+interface TaskProps {
+  text: string,
+  dragHandleProps: Object,
+  onClick: React.MouseEventHandler<HTMLButtonElement>,
+  onBlur: React.FocusEventHandler<HTMLTextAreaElement>,
+  done: boolean
+}
+
+const Task: React.FC<TaskProps> = ({ text, dragHandleProps, onClick, onBlur, done }) => {
+  const taskInput = useCallback((node : HTMLTextAreaElement) => {
     if (node !== null) {
-      textareaAutoHeight(node);
+      textareaAutoHeight(node!);
     }
   }, []);
 
-  const handleOnBlur = (e) => {
-    onBlur(e);
-  };
-
-  const textareaAutoHeight = (textarea) => {
+  const textareaAutoHeight = (textarea : HTMLTextAreaElement) => {
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   };
@@ -26,7 +30,7 @@ const Task = ({ text, dragHandleProps, onClick, onBlur, done }) => {
       <TextContainer>
         <TextInput
           id="text-input"
-          rows="1"
+          rows={1}
           ref={taskInput}
           defaultValue={text}
           spellCheck="false"
@@ -40,7 +44,7 @@ const Task = ({ text, dragHandleProps, onClick, onBlur, done }) => {
             e.target.value = value;
           }}
           onChange={(e) => textareaAutoHeight(e.target)}
-          onBlur={(e) => handleOnBlur(e)}
+          onBlur={onBlur}
         />
         <DragHandle {...dragHandleProps}>
           <MdDragHandle />
@@ -65,7 +69,7 @@ const CheckboxContainer = styled.button`
   cursor: pointer;
 `;
 
-const Checkbox = styled.div`
+const Checkbox = styled.div<{ done: boolean }>`
   width: 16px;
   height: 16px;
   border: 1.5px solid black;
@@ -83,7 +87,7 @@ const TextContainer = styled.div`
   display: flex;
 `;
 
-const TextInput = styled.textarea`
+const TextInput = styled.textarea<{ done: boolean }>`
   width: 100%;
   font-size: 1rem;
   font-weight: 400;

@@ -1,24 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useMediaQuery } from "react-responsive";
 import { useBeforeunload } from "react-beforeunload";
-import Seo from "../components/SEO";
-import Task from "../components/Task";
+import Seo from "../components/Seo";
+import TaskItem from "../components/TaskItem";
+import Title from "../components/Title";
+import AddTaskInput from "../components/AddTaskInput";
 
 import {
   getTaskListFromDB,
-  addTaskToDB,
   deleteTasksFromDb,
   editTaskInDb,
-  reorderTasksInDb,
-  deleteTasksFromDbgg,
-} from "../data/indexedDB";
+  setTasksInDb,
+  Task
+} from "../data/todosDB";
 
-const IndexPage = () => {
-  const [task, setTask] = useState("");
-  const [taskDoneList, setTaskDoneList] = useState([]);
-  const [taskList, setTaskList] = useState([]);
+const IndexPage: React.FC = () => {
+  const [taskDoneList, setTaskDoneList] = useState<number[]>([]);
+  const [taskList, setTaskList] = useState<Task[]>([]);
 
   // taskList ref for getting current value of state inside setTimeout
   const taskListRef = useRef(taskList);
@@ -28,14 +28,17 @@ const IndexPage = () => {
   const taskDoneListRef = useRef(taskDoneList);
   taskDoneListRef.current = taskDoneList;
 
-  const [timeoutId, setTimeoutId] = useState("");
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout>();
 
   const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
 
   useEffect(() => {
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
-    getTaskListFromDB(setTaskList);
+
+    getTaskListFromDB((tasks) => {
+      setTaskList(tasks);
+    });
 
     let addTaskBtn = document.getElementById("add-task-btn");
     let addTaskInput = document.getElementById("add-task-input");
@@ -44,20 +47,16 @@ const IndexPage = () => {
     addTaskInput.style.height = `${addTaskBtn.offsetHeight}px`;
   }, []);
 
+  // If there are checked tasks delete them onBeforeUnload
   useBeforeunload(() => {
     if (timeoutId) {
       clearTimeout(timeoutId);
-      deleteTasksFromDbgg(taskDoneList);
+      deleteTasksFromDb(taskDoneList);
     }
   });
 
-  const handleAddTask = (e) => {
-    e.preventDefault();
-    if (task && task.trim()) addTaskToDB(taskList, setTaskList, task.trim());
-    setTask("");
-  };
-
-  const handleSetTaskDone = (id) => {
+  // Remove task and update state
+  const handleSetTaskDone = (id: number) => {
     let taskDoneListCopy = [...taskDoneList];
 
     // If checked id doesn't exist in taskDoneList add it otherwise delete it
@@ -75,34 +74,51 @@ const IndexPage = () => {
       taskDoneListCopy.length === 0
         ? null
         : setTimeout(() => {
-            deleteTasksFromDb(
-              taskListRef.current,
-              setTaskList,
-              taskDoneListRef.current
-            );
-            setTaskDoneList([]);
-            setTimeoutId(null);
+            deleteTasksFromDb(taskDoneListRef.current, () => {
+              let taskListCopy = [...taskListRef.current];
+
+              taskDoneListRef.current.forEach((id) => {
+                let index = taskListCopy.findIndex((item) => item.id === id);
+                taskListCopy.splice(index, 1);
+              });
+
+              setTaskList(taskListCopy);
+
+              setTaskDoneList([]);
+              setTimeoutId(null);
+            });
           }, 3000);
     setTimeoutId(tID);
     setTaskDoneList(taskDoneListCopy);
   };
 
-  const handleEditTask = (e, id) => {
-    if (e.target.value === "" || !e.target.value.trim())
-      deleteTasksFromDb(taskList, setTaskList, [id]);
-    else editTaskInDb(taskList, setTaskList, id, e.target.value);
+  // Edit task in db and update state
+  const handleEditTask = (textarea: HTMLTextAreaElement, id: number) => {
+    // Check if input is empty or just spaces
+    // If it is delete from db and update state
+    if (textarea.value === "" || !textarea.value.trim())
+      deleteTasksFromDb([id], () => {
+        let taskListCopy = [...taskList];
+        const index = taskListCopy.findIndex((item) => item.id === id);
+        taskListCopy.splice(index, 1);
+        setTaskList(taskListCopy);
+      });
+    else {
+      const editedTask = {
+        text: textarea.value,
+        date: new Date().getTime(),
+      };
+      editTaskInDb(id, editedTask, () => {
+        let taskListCopy = [...taskList];
+        let index = taskListCopy.findIndex((item) => item.id === id);
+        taskListCopy[index] = { id, ...editedTask };
+        setTaskList(taskListCopy);
+      });
+    }
   };
 
-  const getCurrentDate = () => {
-    let d = new Date();
-    let day = d.getDate();
-    let month = d.getMonth() + 1;
-    let year = d.getFullYear();
-
-    return `${day}/${month}/${year}`;
-  };
-
-  const handleOnDragEnd = (result) => {
+  const handleOnDragEnd = (result: DropResult) => {
+    // If item is dragged outside of droppable return
     if (!result.destination) return;
 
     let taskListCopy = [...taskList];
@@ -115,24 +131,26 @@ const IndexPage = () => {
     let taskDoneListIndexes =
       timeoutId &&
       taskDoneList.map((taskDoneId) =>
-        taskListCopy.findIndex((task) => task.id === taskDoneId)
+        taskListCopy.findIndex((item) => item.id === taskDoneId)
       );
 
     // Sort IDs to keep items sorted in db
     let idList = taskListCopy.map((item) => item.id);
-    idList.sort((a, b) => a - b);
+    // Add + in front of Indexable a, b to convert them to numbers
+    idList.sort((a, b) => +a - +b);
     taskListCopy.forEach((item, index) => (item.id = idList[index]));
 
     // Store new taskList IDs to taskDoneList
     if (timeoutId) {
       const newTaskDoneList = taskDoneListIndexes.map(
-        (item) => taskListCopy[item].id
+        (item) => +taskListCopy[item].id
       );
       setTaskDoneList(newTaskDoneList);
     }
 
     setTaskList(taskListCopy);
-    reorderTasksInDb(taskListCopy);
+
+    setTasksInDb(taskListCopy);
   };
 
   return (
@@ -140,10 +158,7 @@ const IndexPage = () => {
       <Seo title="Todo" />
       <GlobalStyle />
       <Container>
-        <TitleContainer>
-          <Title>todo</Title>
-          <TextDate>{getCurrentDate()}</TextDate>
-        </TitleContainer>
+        <Title />
         <DragDropContext onDragEnd={handleOnDragEnd}>
           <Droppable droppableId="tasks-droppable">
             {(provided) => (
@@ -163,12 +178,12 @@ const IndexPage = () => {
                           {...(!isDesktop && provided.dragHandleProps)}
                           ref={provided.innerRef}
                         >
-                          <Task
+                          <TaskItem
                             text={item.text}
                             dragHandleProps={provided.dragHandleProps}
-                            onClick={() => handleSetTaskDone(item.id)}
-                            onBlur={(e) => handleEditTask(e, item.id)}
-                            done={taskDoneList.includes(item.id)}
+                            onClick={() => handleSetTaskDone(+item.id)}
+                            onBlur={(e) => handleEditTask(e.target, +item.id)}
+                            done={taskDoneList.includes(+item.id)}
                           />
                         </div>
                       )}
@@ -180,22 +195,7 @@ const IndexPage = () => {
             )}
           </Droppable>
         </DragDropContext>
-        <AddTaskContainer onSubmit={handleAddTask}>
-          <TextInput
-            type="text"
-            placeholder="Write your task"
-            id="add-task-input"
-            autocomplete="off"
-            value={task}
-            onChange={(e) => {
-              setTask(e.target.value);
-            }}
-            required
-          />
-          <AddButton type="submit" id="add-task-btn">
-            Add
-          </AddButton>
-        </AddTaskContainer>
+        <AddTaskInput taskList={taskList} setTaskList={setTaskList} />
       </Container>
     </MainContainer>
   );
@@ -229,26 +229,6 @@ const Container = styled.section`
   }
 `;
 
-const TitleContainer = styled.article`
-  margin: 80px 0 80px 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const Title = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 400;
-  margin-bottom: 10px;
-`;
-
-const TextDate = styled.h3`
-  font-size: 1.125rem;
-  font-weight: 300;
-`;
-
 const TaskList = styled.ul`
   list-style-type: none;
   padding-bottom: 100px;
@@ -257,53 +237,6 @@ const TaskList = styled.ul`
 const TaskListEmptyText = styled.p`
   color: rgba(0, 0, 0, 0.5);
   text-align: center;
-`;
-
-const AddTaskContainer = styled.form`
-  position: fixed;
-  background-color: yellow;
-  width: calc(100% - 40px);
-  bottom: 20px;
-  right: 20px;
-  @media (min-width: 768px) {
-    width: calc(60% - 40px);
-    right: 50%;
-    transform: translateX(50%);
-  }
-`;
-
-const TextInput = styled.input`
-  position: absolute;
-  width: 100%;
-  bottom: 0;
-  right: 0;
-  border-radius: 30px;
-  outline: none;
-  border: none;
-  background-color: white;
-  padding: 16px 24px;
-  font-size: 1rem;
-`;
-
-const AddButton = styled.button`
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  background-color: black;
-  color: white;
-  border: none;
-  cursor: pointer;
-  padding: 16px 24px;
-  border-radius: 30px;
-  text-transform: uppercase;
-  letter-spacing: 1.25px;
-  font-size: 0.875rem;
-  font-weight: 500;
-
-  &:hover {
-    background-color: #212121;
-  }
 `;
 
 export default IndexPage;

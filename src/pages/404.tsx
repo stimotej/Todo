@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "gatsby";
 import styled, { createGlobalStyle } from "styled-components";
 
-const NotFoundPage = () => {
+const NotFoundPage: React.FC = () => {
   return (
     <MainContainer>
       <GlobalStyle />
@@ -15,7 +15,7 @@ const NotFoundPage = () => {
 const GlobalStyle = createGlobalStyle`
   * {
     background-color: #F5F5F5;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;

@@ -3,11 +3,14 @@ import styled from "styled-components";
 import { addTaskToDB, Task } from "../data/todosDB";
 
 interface AddTaskInputProps {
-  taskList: Task[],
-  setTaskList: React.Dispatch<React.SetStateAction<Task[]>>
+  taskList: Task[];
+  setTaskList: React.Dispatch<React.SetStateAction<Task[]>>;
 }
 
-const AddTaskInput: React.FC<AddTaskInputProps> = ({ taskList, setTaskList }) => {
+const AddTaskInput: React.FC<AddTaskInputProps> = ({
+  taskList,
+  setTaskList,
+}) => {
   const [task, setTask] = useState("");
 
   // Add task to db and update state
@@ -48,7 +51,6 @@ const AddTaskInput: React.FC<AddTaskInputProps> = ({ taskList, setTaskList }) =>
 
 const AddTaskContainer = styled.form`
   position: fixed;
-  background-color: yellow;
   width: calc(100% - 40px);
   bottom: 20px;
   right: 20px;

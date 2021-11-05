@@ -1,23 +1,31 @@
 import React, { useCallback } from "react";
 import styled from "styled-components";
-import { MdDragHandle } from "react-icons/md";
+import { DragHandle } from "@styled-icons/material/DragHandle";
+import Icon from "./Icon";
 
 interface TaskProps {
-  text: string,
-  dragHandleProps: Object,
-  onClick: React.MouseEventHandler<HTMLButtonElement>,
-  onBlur: React.FocusEventHandler<HTMLTextAreaElement>,
-  done: boolean
+  text: string;
+  dragHandleProps: Object;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+  onBlur: React.FocusEventHandler<HTMLTextAreaElement>;
+  done: boolean;
 }
 
-const Task: React.FC<TaskProps> = ({ text, dragHandleProps, onClick, onBlur, done }) => {
-  const taskInput = useCallback((node : HTMLTextAreaElement) => {
+const Task: React.FC<TaskProps> = ({
+  text,
+  dragHandleProps,
+  onClick,
+  onBlur,
+  done,
+}) => {
+  const taskInput = useCallback((node: HTMLTextAreaElement) => {
     if (node !== null) {
       textareaAutoHeight(node!);
+      if (!node.value) node.focus();
     }
   }, []);
 
-  const textareaAutoHeight = (textarea : HTMLTextAreaElement) => {
+  const textareaAutoHeight = (textarea: HTMLTextAreaElement) => {
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   };
@@ -46,9 +54,9 @@ const Task: React.FC<TaskProps> = ({ text, dragHandleProps, onClick, onBlur, don
           onChange={(e) => textareaAutoHeight(e.target)}
           onBlur={onBlur}
         />
-        <DragHandle {...dragHandleProps}>
-          <MdDragHandle />
-        </DragHandle>
+        <DragHandleContainer {...dragHandleProps}>
+          <Icon icon={DragHandle} colorLight />
+        </DragHandleContainer>
       </TextContainer>
     </TaskContainer>
   );
@@ -72,15 +80,15 @@ const CheckboxContainer = styled.button`
 const Checkbox = styled.div<{ done: boolean }>`
   width: 16px;
   height: 16px;
-  border: 1.5px solid black;
+  border: 1.5px solid ${({ theme }) => theme.text};
   border-radius: 50%;
-  background-color: ${({ done }) => (done ? "black" : "none")};
+  background-color: ${({ done, theme }) => (done ? theme.text : "none")};
 `;
 
 const TextContainer = styled.div`
   width: 100%;
   padding: 20px 0 20px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid ${({ theme }) => theme.divider};
   overflow: hidden;
   box-sizing: border-box;
   user-select: none;
@@ -91,6 +99,7 @@ const TextInput = styled.textarea<{ done: boolean }>`
   width: 100%;
   font-size: 1rem;
   font-weight: 400;
+  color: ${({ theme }) => theme.text};
   border: none;
   outline: none;
   resize: none;
@@ -104,7 +113,7 @@ const TextInput = styled.textarea<{ done: boolean }>`
   }
 `;
 
-const DragHandle = styled.div`
+const DragHandleContainer = styled.div`
   display: none;
 
   @media (min-width: 768px) {
@@ -114,13 +123,5 @@ const DragHandle = styled.div`
     cursor: grab;
   }
 `;
-
-// const Text = styled.p`
-//   font-size: 1rem;
-//   font-weight: 400;
-//   text-decoration: ${(props) => (props.done ? "line-through" : "none")};
-//   word-wrap: break-word;
-//   background-color: red;
-// `;
 
 export default Task;

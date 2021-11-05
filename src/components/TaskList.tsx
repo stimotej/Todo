@@ -15,8 +15,10 @@ import {
   deleteTasksFromDb,
   editTaskInDb,
   setTasksInDb,
+  addTaskToDB,
   Task,
 } from "../data/todosDB";
+import ActionBar from "./ActionBar";
 
 const TaskList: React.FC = () => {
   const [taskDoneList, setTaskDoneList] = useState<number[]>([]);
@@ -149,53 +151,71 @@ const TaskList: React.FC = () => {
     setTasksInDb(taskListCopy);
   };
 
+  const createdTask = useRef(0);
+
+  const handleAddTask = () => {
+    let taskListCopy = [...taskList];
+    const newTask = {
+      date: new Date().getTime(),
+      text: "",
+    };
+    addTaskToDB(newTask, (id) => {
+      taskListCopy.push({ id, ...newTask });
+      setTaskList(taskListCopy);
+    });
+  };
+
   return (
-    <DragDropContext onDragEnd={handleOnDragEnd}>
-      <ListTitle>Today</ListTitle>
-      <Droppable droppableId="tasks-droppable">
-        {(provided) => (
-          <TaskListContainer
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-          >
-            {taskList.length === 0 ? (
-              <TaskListEmptyText>No tasks yet :(</TaskListEmptyText>
-            ) : (
-              taskList.map((item, index) => (
-                <Draggable
-                  key={item.date}
-                  draggableId={item.date.toString()}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      {...provided.draggableProps}
-                      {...(!isDesktop && provided.dragHandleProps)}
-                      ref={provided.innerRef}
-                    >
-                      <TaskItem
-                        text={item.text}
-                        dragHandleProps={provided.dragHandleProps}
-                        onClick={() => handleSetTaskDone(+item.id)}
-                        onBlur={(e) => handleEditTask(e.target, +item.id)}
-                        done={taskDoneList.includes(+item.id)}
-                      />
-                    </div>
-                  )}
-                </Draggable>
-              ))
-            )}
-            {provided.placeholder}
-          </TaskListContainer>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <>
+      <DragDropContext onDragEnd={handleOnDragEnd}>
+        <ListTitle>Today</ListTitle>
+        <Droppable droppableId="tasks-droppable">
+          {(provided) => (
+            <TaskListContainer
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {taskList.length === 0 ? (
+                <TaskListEmptyText>No tasks yet :(</TaskListEmptyText>
+              ) : (
+                taskList.map((item, index) => (
+                  <Draggable
+                    key={item.date}
+                    draggableId={item.date.toString()}
+                    index={index}
+                  >
+                    {(provided) => (
+                      <div
+                        {...provided.draggableProps}
+                        {...(!isDesktop && provided.dragHandleProps)}
+                        ref={provided.innerRef}
+                      >
+                        <TaskItem
+                          text={item.text}
+                          dragHandleProps={provided.dragHandleProps}
+                          onClick={() => handleSetTaskDone(+item.id)}
+                          onBlur={(e) => handleEditTask(e.target, +item.id)}
+                          done={taskDoneList.includes(+item.id)}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))
+              )}
+              {provided.placeholder}
+            </TaskListContainer>
+          )}
+        </Droppable>
+      </DragDropContext>
+      <ActionBar handleAddTask={handleAddTask} />
+    </>
   );
 };
 
 const ListTitle = styled.h3`
   font-size: 1rem;
   font-weight: 500;
+  color: ${({ theme }) => theme.text};
 `;
 
 const TaskListContainer = styled.ul`
@@ -204,7 +224,7 @@ const TaskListContainer = styled.ul`
 `;
 
 const TaskListEmptyText = styled.p`
-  color: rgba(0, 0, 0, 0.5);
+  color: ${({ theme }) => theme.textLight};
   text-align: center;
 `;
 

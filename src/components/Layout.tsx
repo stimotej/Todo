@@ -1,24 +1,31 @@
-import React from "react";
-import styled, { createGlobalStyle } from "styled-components";
-import ActionBar from "./ActionBar";
+import React, { useState } from "react";
+import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
+import { lightTheme, darkTheme, ThemeType } from "../theme/theme";
 import Header from "./Header";
 
 const Layout: React.FC = ({ children }) => {
+  const [themeDark, setThemeDark] = useState(false);
+
   return (
-    <MainContainer>
-      <GlobalStyle />
-      <Container>
-        <Header />
-        {children}
-        <ActionBar />
-      </Container>
-    </MainContainer>
+    <ThemeProvider theme={themeDark ? darkTheme : lightTheme}>
+      <MainContainer>
+        <GlobalStyle />
+        <Container>
+          <Header
+            themeButton
+            onClick={() => setThemeDark(!themeDark)}
+            themeDark={themeDark}
+          />
+          {children}
+        </Container>
+      </MainContainer>
+    </ThemeProvider>
   );
 };
 
-const GlobalStyle = createGlobalStyle`
+const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
   * {
-    background-color: #F5F5F5;
+    background-color: ${({ theme }) => theme.background};
     font-family: 'Open Sans', sans-serif;
     margin: 0;
     padding: 0;
@@ -39,9 +46,9 @@ const MainContainer = styled.main`
 const Container = styled.div`
   padding: 0 20px 0 20px;
   width: 100%;
+
   @media (min-width: 768px) {
     max-width: 60%;
-    background-color: yellow;
   }
 `;
 

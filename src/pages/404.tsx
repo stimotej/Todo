@@ -1,30 +1,20 @@
 import React from "react";
 import { Link } from "gatsby";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
+import Layout from "../components/Layout";
 
 const NotFoundPage: React.FC = () => {
   return (
-    <MainContainer>
-      <GlobalStyle />
-      <Title>Page not found :(</Title>
-      <TodoLink to="/">Open todo</TodoLink>
-    </MainContainer>
+    <Layout>
+      <Container>
+        <Title>Page not found :(</Title>
+        <TodoLink to="/">Open todo</TodoLink>
+      </Container>
+    </Layout>
   );
 };
 
-const GlobalStyle = createGlobalStyle`
-  * {
-    background-color: #F5F5F5;
-    font-family: 'Open Sans', sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    font-size:100%
-  }
-`;
-
-const MainContainer = styled.main`
+const Container = styled.main`
   display: flex;
   flex-direction: column;
   align-items: center;

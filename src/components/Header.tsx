@@ -1,25 +1,28 @@
 import React from "react";
-import { MdDarkMode } from "react-icons/md";
+import { DarkMode, LightMode } from "@styled-icons/material";
 import styled from "styled-components";
+import Icon from "./Icon";
 
-const Title: React.FC = () => {
+interface HeaderProps {
+  themeButton?: boolean;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  themeDark: boolean;
+}
+
+const Title: React.FC<HeaderProps> = ({ themeButton, onClick, themeDark }) => {
   return (
     <HeaderContainer>
       <TitleTodo>Todo</TitleTodo>
-      <ThemeButton>
-        <MdDarkMode
-          style={{
-            backgroundColor: "transparent",
-            width: "24px",
-            height: "24px",
-          }}
-        />
-      </ThemeButton>
+      {themeButton && (
+        <ThemeButton onClick={onClick}>
+          <Icon icon={themeDark ? LightMode : DarkMode} />
+        </ThemeButton>
+      )}
     </HeaderContainer>
   );
 };
 
-const HeaderContainer = styled.article`
+const HeaderContainer = styled.header`
   margin-top: 60px;
   width: 100%;
   display: flex;
@@ -30,6 +33,7 @@ const HeaderContainer = styled.article`
 const TitleTodo = styled.h1`
   font-size: 1.5rem;
   font-weight: 400;
+  color: ${({ theme }) => theme.text};
 `;
 
 const ThemeButton = styled.button`
@@ -42,7 +46,7 @@ const ThemeButton = styled.button`
   border-radius: 50%;
 
   &:hover {
-    background-color: #eeeeee;
+    background-color: ${({ theme }) => theme.main};
   }
 `;
 

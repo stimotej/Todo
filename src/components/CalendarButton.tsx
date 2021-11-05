@@ -1,20 +1,14 @@
 import { Link } from "gatsby";
 import React from "react";
-import { MdCalendarToday } from "react-icons/md";
+import { CalendarToday } from "@styled-icons/material/CalendarToday";
 import styled from "styled-components";
+import Icon from "./Icon";
 
 const CalendarButton: React.FC = () => {
   return (
     <CalendarContainer>
       <OtherDaysLink to="/">
-        <MdCalendarToday
-          style={{
-            backgroundColor: "transparent",
-            width: "24px",
-            height: "24px",
-            marginRight: "10px",
-          }}
-        />
+        <Icon icon={CalendarToday} margin colorLight />
         Days
       </OtherDaysLink>
     </CalendarContainer>
@@ -31,8 +25,8 @@ const OtherDaysLink = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #eeeeee;
-  color: black;
+  background-color: ${({ theme }) => theme.main};
+  color: ${({ theme }) => theme.textLight};
   text-decoration: none;
   border-radius: 60px;
   padding: 16px 24px;

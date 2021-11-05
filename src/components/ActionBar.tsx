@@ -1,30 +1,21 @@
 import React from "react";
-import { MdAdd, MdChevronLeft } from "react-icons/md";
+import { ChevronLeft, Add } from "@styled-icons/material";
 import styled from "styled-components";
+import Icon from "./Icon";
 
-const ActionBar: React.FC = () => {
+interface ActionBarProps {
+  handleAddTask: React.MouseEventHandler<HTMLButtonElement>;
+}
+
+const ActionBar: React.FC<ActionBarProps> = ({ handleAddTask }) => {
   return (
     <ActionBarContainer>
       <Button>
-        <MdChevronLeft
-          style={{
-            backgroundColor: "transparent",
-            width: "24px",
-            height: "24px",
-            marginRight: "10px",
-          }}
-        />
+        <Icon icon={ChevronLeft} margin />
         Home
       </Button>
-      <Button>
-        <MdAdd
-          style={{
-            backgroundColor: "transparent",
-            width: "24px",
-            height: "24px",
-            marginRight: "10px",
-          }}
-        />
+      <Button onClick={handleAddTask}>
+        <Icon icon={Add} margin />
         Add task
       </Button>
     </ActionBarContainer>
@@ -36,7 +27,7 @@ const ActionBarContainer = styled.section`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: rgba(238, 238, 238, 0.4);
+  background-color: ${({ theme }) => theme.backdropColor};
   backdrop-filter: blur(30px);
   width: 100%;
   bottom: 0;
@@ -54,7 +45,7 @@ const Button = styled.button`
   align-items: center;
   justify-content: center;
   padding: 16px;
-  color: black;
+  color: ${({ theme }) => theme.text};
   background-color: transparent;
   border: none;
   cursor: pointer;

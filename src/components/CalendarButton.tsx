@@ -1,13 +1,13 @@
-import { Link } from "gatsby";
 import React from "react";
-import { CalendarToday } from "@styled-icons/material/CalendarToday";
+import { Link } from "gatsby";
+import { CalendarToday } from "@styled-icons/material-outlined/CalendarToday";
 import styled from "styled-components";
 import Icon from "./Icon";
 
 const CalendarButton: React.FC = () => {
   return (
     <CalendarContainer>
-      <OtherDaysLink to="/">
+      <OtherDaysLink to="/days">
         <Icon icon={CalendarToday} margin colorLight />
         Days
       </OtherDaysLink>
@@ -32,6 +32,10 @@ const OtherDaysLink = styled(Link)`
   padding: 16px 24px;
   font-size: 1rem;
   font-weight: 400;
+
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
 `;
 
 export default CalendarButton;

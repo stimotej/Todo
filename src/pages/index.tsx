@@ -6,7 +6,7 @@ import TaskList from "../components/TaskList";
 
 const IndexPage: React.FC = () => {
   return (
-    <Layout>
+    <Layout themeButton>
       <Seo title="Todo" />
       <CalendarButton />
       <TaskList />

@@ -12,9 +12,9 @@ import TaskItem from "../components/TaskItem";
 
 import {
   getTaskListFromDB,
-  deleteTasksFromDb,
-  editTaskInDb,
-  setTasksInDb,
+  deleteTasksFromDB,
+  editTaskInDB,
+  setTasksInDB,
   addTaskToDB,
   Task,
 } from "../data/todosDB";
@@ -49,7 +49,7 @@ const TaskList: React.FC = () => {
   useBeforeunload(() => {
     if (timeoutId) {
       clearTimeout(timeoutId);
-      deleteTasksFromDb(taskDoneList);
+      deleteTasksFromDB(taskDoneList);
     }
   });
 
@@ -72,7 +72,7 @@ const TaskList: React.FC = () => {
       taskDoneListCopy.length === 0
         ? null
         : setTimeout(() => {
-            deleteTasksFromDb(taskDoneListRef.current, () => {
+            deleteTasksFromDB(taskDoneListRef.current, () => {
               let taskListCopy = [...taskListRef.current];
 
               taskDoneListRef.current.forEach((id) => {
@@ -95,7 +95,7 @@ const TaskList: React.FC = () => {
     // Check if input is empty or just spaces
     // If it is delete from db and update state
     if (textarea.value === "" || !textarea.value.trim())
-      deleteTasksFromDb([id], () => {
+      deleteTasksFromDB([id], () => {
         let taskListCopy = [...taskList];
         const index = taskListCopy.findIndex((item) => item.id === id);
         taskListCopy.splice(index, 1);
@@ -106,7 +106,7 @@ const TaskList: React.FC = () => {
         text: textarea.value,
         date: new Date().getTime(),
       };
-      editTaskInDb(id, editedTask, () => {
+      editTaskInDB(id, editedTask, () => {
         let taskListCopy = [...taskList];
         let index = taskListCopy.findIndex((item) => item.id === id);
         taskListCopy[index] = { id, ...editedTask };
@@ -148,7 +148,7 @@ const TaskList: React.FC = () => {
 
     setTaskList(taskListCopy);
 
-    setTasksInDb(taskListCopy);
+    setTasksInDB(taskListCopy);
   };
 
   const createdTask = useRef(0);
@@ -207,7 +207,8 @@ const TaskList: React.FC = () => {
           )}
         </Droppable>
       </DragDropContext>
-      <ActionBar handleAddTask={handleAddTask} />
+
+      <ActionBar actionText="Add task" handleAction={handleAddTask} />
     </>
   );
 };
@@ -226,6 +227,7 @@ const TaskListContainer = styled.ul`
 const TaskListEmptyText = styled.p`
   color: ${({ theme }) => theme.textLight};
   text-align: center;
+  margin-top: 60px;
 `;
 
 export default TaskList;

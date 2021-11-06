@@ -1,15 +1,16 @@
 import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("TodoDB");
-db.version(1).stores({ tasks: "++id" });
+const dbVersion = 1.2;
+db.version(dbVersion).stores({ tasks: "++id", options: "++id" });
 
 export interface Task {
-  id?: IndexableType,
-  text: string,
-  date: number
+  id?: IndexableType;
+  text: string;
+  date: number;
 }
 
-export const getTaskListFromDB = (callback?: (tasks: Task[]) => void) : void => {
+export const getTaskListFromDB = (callback?: (tasks: Task[]) => void): void => {
   db.table("tasks")
     .toArray()
     .then((tasks) => {
@@ -17,7 +18,10 @@ export const getTaskListFromDB = (callback?: (tasks: Task[]) => void) : void => 
     });
 };
 
-export const addTaskToDB = (task : Task, callback?: (id: IndexableType) => void) : void => {
+export const addTaskToDB = (
+  task: Task,
+  callback?: (id: IndexableType) => void
+): void => {
   db.table("tasks")
     .add(task)
     .then((id) => {
@@ -25,7 +29,10 @@ export const addTaskToDB = (task : Task, callback?: (id: IndexableType) => void)
     });
 };
 
-export const setTasksInDb = (taskList: Task[], callback?: (id: IndexableType) => void) : void => {
+export const setTasksInDB = (
+  taskList: Task[],
+  callback?: (id: IndexableType) => void
+): void => {
   db.table("tasks")
     .bulkPut(taskList)
     .then((lastKey) => {
@@ -33,7 +40,10 @@ export const setTasksInDb = (taskList: Task[], callback?: (id: IndexableType) =>
     });
 };
 
-export const deleteTasksFromDb = (taskIdList: number[], callback?: () => void) : void => {
+export const deleteTasksFromDB = (
+  taskIdList: number[],
+  callback?: () => void
+): void => {
   db.table("tasks")
     .bulkDelete(taskIdList)
     .then(() => {
@@ -41,9 +51,38 @@ export const deleteTasksFromDb = (taskIdList: number[], callback?: () => void) :
     });
 };
 
-export const editTaskInDb = (id: number, editedTask: Task, callback?: () => void) : void => {
+export const editTaskInDB = (
+  id: number,
+  editedTask: Task,
+  callback?: () => void
+): void => {
   db.table("tasks")
     .update(id, editedTask)
+    .then(() => {
+      callback && callback();
+    });
+};
+
+export interface Options {
+  darkTheme: boolean;
+}
+
+export const getOptionsFromDB = (
+  callback?: (options: Options) => void
+): void => {
+  db.table("options")
+    .get(1)
+    .then((options) => {
+      callback && callback(options);
+    });
+};
+
+export const setOptionsInDB = (
+  options: Options,
+  callback?: () => void
+): void => {
+  db.table("options")
+    .put({ id: 1, ...options })
     .then(() => {
       callback && callback();
     });

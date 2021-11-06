@@ -1,10 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
+import { getOptionsFromDB, setOptionsInDB } from "../data/todosDB";
 import { lightTheme, darkTheme, ThemeType } from "../theme/theme";
 import Header from "./Header";
 
-const Layout: React.FC = ({ children }) => {
+interface LayoutProps {
+  title?: string;
+  themeButton?: boolean;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, title, themeButton }) => {
   const [themeDark, setThemeDark] = useState(false);
+
+  useEffect(() => {
+    getOptionsFromDB((options) => {
+      if (options) setThemeDark(options.darkTheme);
+    });
+  }, []);
+
+  const handleChangeTheme = () => {
+    const options = {
+      darkTheme: !themeDark,
+    };
+    setOptionsInDB(options, () => {
+      setThemeDark(!themeDark);
+    });
+  };
 
   return (
     <ThemeProvider theme={themeDark ? darkTheme : lightTheme}>
@@ -12,8 +33,9 @@ const Layout: React.FC = ({ children }) => {
         <GlobalStyle />
         <Container>
           <Header
-            themeButton
-            onClick={() => setThemeDark(!themeDark)}
+            title={title}
+            themeButton={themeButton}
+            onClick={handleChangeTheme}
             themeDark={themeDark}
           />
           {children}
@@ -25,7 +47,6 @@ const Layout: React.FC = ({ children }) => {
 
 const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
   * {
-    background-color: ${({ theme }) => theme.background};
     font-family: 'Open Sans', sans-serif;
     margin: 0;
     padding: 0;
@@ -33,6 +54,9 @@ const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     -webkit-tap-highlight-color: transparent;
     font-size:100%;
     outline: none;
+  }
+  html {
+    background-color: ${({ theme }) => theme.background};
   }
 `;
 

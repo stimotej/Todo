@@ -105,6 +105,7 @@ const TextInput = styled.textarea<{ done: boolean }>`
   resize: none;
   overflow: hidden;
   user-select: none;
+  background-color: transparent;
   text-decoration: ${({ done }) => (done ? "line-through" : "none")};
 
   &:focus {

@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import styled from "styled-components";
-import { DragHandle } from "@styled-icons/material/DragHandle";
+import { DragHandle, PriorityHigh } from "@styled-icons/material-outlined";
 import Icon from "./Icon";
 
 interface TaskProps {
@@ -9,6 +9,7 @@ interface TaskProps {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onBlur: React.FocusEventHandler<HTMLTextAreaElement>;
   done: boolean;
+  important: boolean;
 }
 
 const Task: React.FC<TaskProps> = ({
@@ -17,6 +18,7 @@ const Task: React.FC<TaskProps> = ({
   onClick,
   onBlur,
   done,
+  important,
 }) => {
   const taskInput = useCallback((node: HTMLTextAreaElement) => {
     if (node !== null) {
@@ -36,6 +38,11 @@ const Task: React.FC<TaskProps> = ({
         <Checkbox done={done} />
       </CheckboxContainer>
       <TextContainer>
+        {important && (
+          <Important>
+            <Icon icon={PriorityHigh} />
+          </Important>
+        )}
         <TextInput
           id="text-input"
           rows={1}
@@ -67,6 +74,12 @@ const TaskContainer = styled.li`
   margin-bottom: 10px;
 `;
 
+const Important = styled.div`
+  & * {
+    color: red;
+  }
+`;
+
 const CheckboxContainer = styled.button`
   padding: 0 16px 0 16px;
   display: flex;
@@ -83,6 +96,7 @@ const Checkbox = styled.div<{ done: boolean }>`
   border: 1.5px solid ${({ theme }) => theme.text};
   border-radius: 50%;
   background-color: ${({ done, theme }) => (done ? theme.text : "none")};
+  transition: all 0.5s ease;
 `;
 
 const TextContainer = styled.div`
@@ -93,6 +107,7 @@ const TextContainer = styled.div`
   box-sizing: border-box;
   user-select: none;
   display: flex;
+  transition: all 0.5s ease;
 `;
 
 const TextInput = styled.textarea<{ done: boolean }>`
@@ -107,6 +122,7 @@ const TextInput = styled.textarea<{ done: boolean }>`
   user-select: none;
   background-color: transparent;
   text-decoration: ${({ done }) => (done ? "line-through" : "none")};
+  transition: all 0.5s ease;
 
   &:focus {
     outline: none;

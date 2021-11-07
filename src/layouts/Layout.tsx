@@ -1,15 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { getOptionsFromDB, setOptionsInDB } from "../data/todosDB";
-import { lightTheme, darkTheme, ThemeType } from "../theme/theme";
-import Header from "./Header";
+import { lightTheme, darkTheme, ThemeType } from "../themes/theme";
 
-interface LayoutProps {
-  title?: string;
-  themeButton?: boolean;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children, title, themeButton }) => {
+const Layout: React.FC = ({ children }) => {
   const [themeDark, setThemeDark] = useState(false);
 
   useEffect(() => {
@@ -28,18 +22,17 @@ const Layout: React.FC<LayoutProps> = ({ children, title, themeButton }) => {
   };
 
   return (
-    <ThemeProvider theme={themeDark ? darkTheme : lightTheme}>
+    <ThemeProvider
+      theme={{
+        ...(themeDark ? darkTheme : lightTheme),
+        themeDark,
+        handleChangeTheme,
+      }}
+    >
       <MainContainer>
         <GlobalStyle />
-        <Container>
-          <Header
-            title={title}
-            themeButton={themeButton}
-            onClick={handleChangeTheme}
-            themeDark={themeDark}
-          />
-          {children}
-        </Container>
+        <Background />
+        <Container>{children}</Container>
       </MainContainer>
     </ThemeProvider>
   );
@@ -55,9 +48,15 @@ const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     font-size:100%;
     outline: none;
   }
-  html {
-    background-color: ${({ theme }) => theme.background};
-  }
+`;
+
+const Background = styled.div`
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: -100;
+  background-color: ${({ theme }) => theme.background};
+  transition: background-color 0.5s ease;
 `;
 
 const MainContainer = styled.main`

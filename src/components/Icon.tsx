@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { StyledIcon } from "@styled-icons/styled-icon";
 import { withTheme } from "styled-components";
-import { ThemeType } from "../theme/theme";
+import { ThemeType } from "../themes/theme";
 
 interface IconProps {
   icon: StyledIcon;
@@ -28,6 +28,7 @@ const IconStyled = styled.div<{ margin: boolean }>`
   width: 24px;
   height: 24px;
   margin-right: ${({ margin }) => (margin ? "10px" : "0")};
+  transition: all 0.5s ease;
 `;
 
 export default withTheme(Icon);

@@ -1,27 +1,22 @@
-import React from "react";
+import React, { useContext } from "react";
 import { DarkMode, LightMode } from "@styled-icons/material-outlined";
-import styled from "styled-components";
+import styled, { ThemeContext } from "styled-components";
 import Icon from "./Icon";
 
 interface HeaderProps {
   title?: string;
   themeButton?: boolean;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  themeDark: boolean;
 }
 
-const Title: React.FC<HeaderProps> = ({
-  title,
-  themeButton,
-  onClick,
-  themeDark,
-}) => {
+const Title: React.FC<HeaderProps> = ({ title, themeButton }) => {
+  const themeContext = useContext(ThemeContext);
+
   return (
     <HeaderContainer>
       <TitleTodo>{title || "Todo"}</TitleTodo>
       {themeButton && (
-        <ThemeButton onClick={onClick}>
-          <Icon icon={themeDark ? LightMode : DarkMode} />
+        <ThemeButton onClick={themeContext.handleChangeTheme}>
+          <Icon icon={themeContext.themeDark ? LightMode : DarkMode} />
         </ThemeButton>
       )}
     </HeaderContainer>
@@ -40,6 +35,7 @@ const TitleTodo = styled.h1`
   font-size: 1.5rem;
   font-weight: 400;
   color: ${({ theme }) => theme.text};
+  transition: all 0.5s ease;
 `;
 
 const ThemeButton = styled.button`

@@ -2,12 +2,14 @@ import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("TodoDB");
 const dbVersion = 1.2;
-db.version(dbVersion).stores({ tasks: "++id", options: "++id" });
+db.version(dbVersion).stores({ tasks: "++id", options: "++id", days: "++id" });
 
 export interface Task {
   id?: IndexableType;
   text: string;
-  date: number;
+  createdAt?: number;
+  date?: number;
+  important?: boolean;
 }
 
 export const getTaskListFromDB = (callback?: (tasks: Task[]) => void): void => {
@@ -85,5 +87,30 @@ export const setOptionsInDB = (
     .put({ id: 1, ...options })
     .then(() => {
       callback && callback();
+    });
+};
+
+interface Day {
+  title: string;
+  date: number;
+  taskCount: number;
+}
+
+export const getDaysFromDB = (callback?: (days: Day[]) => void): void => {
+  db.table("days")
+    .toArray()
+    .then((options) => {
+      callback && callback(options);
+    });
+};
+
+export const addDayToDB = (
+  day: Day,
+  callback?: (id: IndexableType) => void
+): void => {
+  db.table("days")
+    .add(day)
+    .then((id) => {
+      callback && callback(id);
     });
 };

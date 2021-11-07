@@ -32,9 +32,14 @@ const OtherDaysLink = styled(Link)`
   padding: 16px 24px;
   font-size: 1rem;
   font-weight: 400;
+  transition: all 0.5s ease;
 
   &:hover {
+    transition: none;
     color: ${({ theme }) => theme.text};
+    & * {
+      color: ${({ theme }) => theme.text};
+    }
   }
 `;
 

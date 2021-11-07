@@ -28,6 +28,8 @@ const DayContainer = styled.div`
   background-color: ${({ theme }) => theme.main};
   border-radius: 20px;
   padding: 20px;
+  margin-top: 20px;
+  transition: all 0.5s ease;
 
   &:hover {
     cursor: pointer;
@@ -46,12 +48,14 @@ const Title = styled.h3`
   font-size: 1rem;
   font-weight: 400;
   margin-bottom: 20px;
+  transition: all 0.5s ease;
 `;
 
 const TaskCount = styled.p`
   color: ${({ theme }) => theme.textLight};
   font-size: 1rem;
   font-weight: 400;
+  transition: all 0.5s ease;
 `;
 
 export default DayItem;

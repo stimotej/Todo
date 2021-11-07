@@ -45,6 +45,7 @@ const ActionBarContainer = styled.section`
   width: 100%;
   bottom: 0;
   right: 0;
+  transition: all 0.5s ease;
 
   @media (min-width: 768px) {
     width: calc(60% - 40px);
@@ -68,6 +69,7 @@ const Button = styled.button<{ alignRight?: boolean }>`
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
+  transition: all 0.5s ease;
 `;
 
 export default ActionBar;

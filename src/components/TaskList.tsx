@@ -43,6 +43,8 @@ const TaskList: React.FC = () => {
     getTaskListFromDB((tasks) => {
       setTaskList(tasks);
     });
+
+    console.log(taskList);
   }, []);
 
   // If there are checked tasks delete them onBeforeUnload
@@ -104,12 +106,11 @@ const TaskList: React.FC = () => {
     else {
       const editedTask = {
         text: textarea.value,
-        date: new Date().getTime(),
       };
       editTaskInDB(id, editedTask, () => {
         let taskListCopy = [...taskList];
         let index = taskListCopy.findIndex((item) => item.id === id);
-        taskListCopy[index] = { id, ...editedTask };
+        taskListCopy[index] = { id, ...taskListCopy[index], ...editedTask };
         setTaskList(taskListCopy);
       });
     }
@@ -151,13 +152,13 @@ const TaskList: React.FC = () => {
     setTasksInDB(taskListCopy);
   };
 
-  const createdTask = useRef(0);
-
   const handleAddTask = () => {
     let taskListCopy = [...taskList];
     const newTask = {
+      createdAt: new Date().getTime(),
       date: new Date().getTime(),
       text: "",
+      important: false,
     };
     addTaskToDB(newTask, (id) => {
       taskListCopy.push({ id, ...newTask });
@@ -180,8 +181,8 @@ const TaskList: React.FC = () => {
               ) : (
                 taskList.map((item, index) => (
                   <Draggable
-                    key={item.date}
-                    draggableId={item.date.toString()}
+                    key={item.createdAt}
+                    draggableId={item.createdAt.toString()}
                     index={index}
                   >
                     {(provided) => (
@@ -196,6 +197,7 @@ const TaskList: React.FC = () => {
                           onClick={() => handleSetTaskDone(+item.id)}
                           onBlur={(e) => handleEditTask(e.target, +item.id)}
                           done={taskDoneList.includes(+item.id)}
+                          important={item.important}
                         />
                       </div>
                     )}
@@ -217,6 +219,7 @@ const ListTitle = styled.h3`
   font-size: 1rem;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
+  transition: all 0.5s ease;
 `;
 
 const TaskListContainer = styled.ul`
@@ -228,6 +231,7 @@ const TaskListEmptyText = styled.p`
   color: ${({ theme }) => theme.textLight};
   text-align: center;
   margin-top: 60px;
+  transition: all 0.5s ease;
 `;
 
 export default TaskList;

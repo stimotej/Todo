@@ -1,16 +1,17 @@
-import React from "react";
-import CalendarButton from "../components/CalendarButton";
+import React, { useState } from "react";
+import DaySelect from "../components/DaySelect";
 import Seo from "../components/Seo";
 import TaskList from "../components/TaskList";
 import Header from "../components/Header";
 
 const IndexPage: React.FC = () => {
+  const [selectedDay, setSelectedDay] = useState(new Date());
   return (
     <>
       <Header themeButton />
       <Seo title="Todo" />
-      <CalendarButton />
-      <TaskList />
+      <DaySelect selectedDay={selectedDay} setSelectedDay={setSelectedDay} />
+      <TaskList selectedDay={selectedDay} />
     </>
   );
 };

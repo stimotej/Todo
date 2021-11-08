@@ -1,4 +1,5 @@
 import Dexie, { IndexableType } from "dexie";
+import { compareDates } from "./dates";
 
 const db = new Dexie("TodoDB");
 const dbVersion = 1.2;
@@ -12,8 +13,12 @@ export interface Task {
   important?: boolean;
 }
 
-export const getTaskListFromDB = (callback?: (tasks: Task[]) => void): void => {
+export const getTaskListFromDB = (
+  date: Date,
+  callback?: (tasks: Task[]) => void
+): void => {
   db.table("tasks")
+    .filter((task) => compareDates(new Date(task.date), date))
     .toArray()
     .then((tasks) => {
       callback && callback(tasks);

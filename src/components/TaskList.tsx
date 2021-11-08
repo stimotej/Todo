@@ -19,8 +19,13 @@ import {
   Task,
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
+import { compareDates, getDayName } from "../data/dates";
 
-const TaskList: React.FC = () => {
+interface TaskListProps {
+  selectedDay: Date;
+}
+
+const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
   const [taskDoneList, setTaskDoneList] = useState<number[]>([]);
   const [taskList, setTaskList] = useState<Task[]>([]);
 
@@ -40,12 +45,10 @@ const TaskList: React.FC = () => {
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
 
-    getTaskListFromDB((tasks) => {
+    getTaskListFromDB(selectedDay, (tasks) => {
       setTaskList(tasks);
     });
-
-    console.log(taskList);
-  }, []);
+  }, [selectedDay]);
 
   // If there are checked tasks delete them onBeforeUnload
   useBeforeunload(() => {
@@ -156,7 +159,7 @@ const TaskList: React.FC = () => {
     let taskListCopy = [...taskList];
     const newTask = {
       createdAt: new Date().getTime(),
-      date: new Date().getTime(),
+      date: selectedDay.getTime(),
       text: "",
       important: false,
     };
@@ -169,7 +172,11 @@ const TaskList: React.FC = () => {
   return (
     <>
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        <ListTitle>Today</ListTitle>
+        <ListTitle>
+          {compareDates(selectedDay, new Date())
+            ? "Today"
+            : getDayName(selectedDay)}
+        </ListTitle>
         <Droppable droppableId="tasks-droppable">
           {(provided) => (
             <TaskListContainer

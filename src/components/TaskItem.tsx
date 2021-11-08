@@ -1,6 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import styled from "styled-components";
-import { DragHandle, PriorityHigh } from "@styled-icons/material-outlined";
+import {
+  DragHandle,
+  PriorityHigh,
+  Edit,
+} from "@styled-icons/material-outlined";
 import Icon from "./Icon";
 
 interface TaskProps {
@@ -20,6 +24,8 @@ const Task: React.FC<TaskProps> = ({
   done,
   important,
 }) => {
+  const [showEditButton, setShowEditButton] = useState(false);
+
   const taskInput = useCallback((node: HTMLTextAreaElement) => {
     if (node !== null) {
       textareaAutoHeight(node!);
@@ -57,10 +63,15 @@ const Task: React.FC<TaskProps> = ({
             let value = e.target.value;
             e.target.value = null;
             e.target.value = value;
+            setShowEditButton(true);
           }}
           onChange={(e) => textareaAutoHeight(e.target)}
-          onBlur={onBlur}
+          onBlur={(e) => {
+            onBlur(e);
+            setShowEditButton(false);
+          }}
         />
+        {showEditButton && <Icon icon={Edit} />}
         <DragHandleContainer {...dragHandleProps}>
           <Icon icon={DragHandle} colorLight />
         </DragHandleContainer>

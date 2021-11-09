@@ -1,10 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 import { getThisWeekDays, dayNames, compareDates } from "../data/dates";
+import { History } from "@styled-icons/material-outlined/History";
+import Icon from "../components/Icon";
 
 interface DaySelectProps {
-  selectedDay: Date;
-  setSelectedDay: React.Dispatch<React.SetStateAction<Date>>;
+  selectedDay: number;
+  setSelectedDay: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const DaySelect: React.FC<DaySelectProps> = ({
@@ -14,11 +16,17 @@ const DaySelect: React.FC<DaySelectProps> = ({
   return (
     <CalendarContainer>
       <DaySelectContainer>
+        <DayButton
+          onClick={() => setSelectedDay(0)}
+          selected={selectedDay === 0}
+        >
+          <Icon icon={History} />
+        </DayButton>
         {getThisWeekDays().map((day, index) => (
           <DayButton
             key={index}
-            onClick={() => setSelectedDay(day)}
-            selected={compareDates(selectedDay, day)}
+            onClick={() => setSelectedDay(day.getTime())}
+            selected={compareDates(new Date(selectedDay), day)}
           >
             <Title>{dayNames[day.getDay()]}</Title>
             <Day>{day.getDate()}</Day>
@@ -32,7 +40,8 @@ const DaySelect: React.FC<DaySelectProps> = ({
 const CalendarContainer = styled.section`
   display: flex;
   padding: 20px 0 40px 0;
-  width: 100%;
+  width: calc(100% + 40px);
+  margin-left: -20px;
 `;
 
 const DaySelectContainer = styled.div`
@@ -41,6 +50,7 @@ const DaySelectContainer = styled.div`
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  padding: 0 20px 0 20px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -61,7 +71,6 @@ const DayButton = styled.button<{ selected: boolean }>`
   justify-content: center;
   background-color: ${({ theme, selected }) =>
     selected ? theme.accent : theme.main};
-  color: ${({ theme, selected }) => (selected ? theme.accentText : theme.text)};
   border: none;
   cursor: pointer;
   border-radius: 20px;
@@ -69,6 +78,11 @@ const DayButton = styled.button<{ selected: boolean }>`
   margin-right: 12px;
   min-width: 70px;
   transition: all 0.5s ease;
+
+  & * {
+    color: ${({ theme, selected }) =>
+      selected ? theme.accentText : theme.text};
+  }
 `;
 
 const Title = styled.h5`

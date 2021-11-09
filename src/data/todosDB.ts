@@ -1,5 +1,5 @@
 import Dexie, { IndexableType } from "dexie";
-import { compareDates } from "./dates";
+import { compareDates, beforeToday } from "./dates";
 
 const db = new Dexie("TodoDB");
 const dbVersion = 1.2;
@@ -13,12 +13,23 @@ export interface Task {
   important?: boolean;
 }
 
-export const getTaskListFromDB = (
+export const getTaskListByDateFromDB = (
   date: Date,
   callback?: (tasks: Task[]) => void
 ): void => {
   db.table("tasks")
     .filter((task) => compareDates(new Date(task.date), date))
+    .toArray()
+    .then((tasks) => {
+      callback && callback(tasks);
+    });
+};
+
+export const getTaskListBeforeTodayFromDB = (
+  callback?: (tasks: Task[]) => void
+): void => {
+  db.table("tasks")
+    .filter((task) => beforeToday(new Date(task.date)))
     .toArray()
     .then((tasks) => {
       callback && callback(tasks);
@@ -61,12 +72,16 @@ export const deleteTasksFromDB = (
 export const editTaskInDB = (
   id: number,
   editedTask: Task,
-  callback?: () => void
+  callback?: () => void,
+  errorCallback?: () => void
 ): void => {
   db.table("tasks")
     .update(id, editedTask)
     .then(() => {
       callback && callback();
+    })
+    .catch(() => {
+      errorCallback && errorCallback();
     });
 };
 

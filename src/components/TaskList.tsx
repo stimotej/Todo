@@ -11,7 +11,8 @@ import { useBeforeunload } from "react-beforeunload";
 import TaskItem from "../components/TaskItem";
 
 import {
-  getTaskListFromDB,
+  getTaskListByDateFromDB,
+  getTaskListBeforeTodayFromDB,
   deleteTasksFromDB,
   editTaskInDB,
   setTasksInDB,
@@ -20,9 +21,10 @@ import {
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
 import { compareDates, getDayName } from "../data/dates";
+import EditTaskModal from "./EditTaskModal";
 
 interface TaskListProps {
-  selectedDay: Date;
+  selectedDay: number;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
@@ -41,13 +43,20 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
 
   const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
 
+  const [editingTask, setEditingTask] = useState(null);
+
   useEffect(() => {
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
 
-    getTaskListFromDB(selectedDay, (tasks) => {
-      setTaskList(tasks);
-    });
+    if (selectedDay === 0)
+      getTaskListBeforeTodayFromDB((task) => {
+        setTaskList(task);
+      });
+    else
+      getTaskListByDateFromDB(new Date(selectedDay), (tasks) => {
+        setTaskList(tasks);
+      });
   }, [selectedDay]);
 
   // If there are checked tasks delete them onBeforeUnload
@@ -96,7 +105,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
   };
 
   // Edit task in db and update state
-  const handleEditTask = (textarea: HTMLTextAreaElement, id: number) => {
+  const handleEditTaskText = (textarea: HTMLTextAreaElement, id: number) => {
     // Check if input is empty or just spaces
     // If it is delete from db and update state
     if (textarea.value === "" || !textarea.value.trim())
@@ -117,6 +126,17 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
         setTaskList(taskListCopy);
       });
     }
+  };
+
+  const handleCloseModal = (editedTask: Task) => {
+    if (editedTask) {
+      let taskListCopy = [...taskList];
+      let index = taskListCopy.findIndex((item) => item.id === editedTask.id);
+      taskListCopy[index] = { ...taskListCopy[index], ...editedTask };
+      console.log({ ...editedTask, ...taskListCopy[index] });
+      setTaskList(taskListCopy);
+    }
+    setEditingTask(null);
   };
 
   const handleOnDragEnd = (result: DropResult) => {
@@ -159,7 +179,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     let taskListCopy = [...taskList];
     const newTask = {
       createdAt: new Date().getTime(),
-      date: selectedDay.getTime(),
+      date: selectedDay,
       text: "",
       important: false,
     };
@@ -173,9 +193,11 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     <>
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <ListTitle>
-          {compareDates(selectedDay, new Date())
+          {selectedDay === 0
+            ? "History"
+            : compareDates(new Date(selectedDay), new Date())
             ? "Today"
-            : getDayName(selectedDay)}
+            : getDayName(new Date(selectedDay))}
         </ListTitle>
         <Droppable droppableId="tasks-droppable">
           {(provided) => (
@@ -202,7 +224,8 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                           text={item.text}
                           dragHandleProps={provided.dragHandleProps}
                           onClick={() => handleSetTaskDone(+item.id)}
-                          onBlur={(e) => handleEditTask(e.target, +item.id)}
+                          onBlur={(e) => handleEditTaskText(e.target, +item.id)}
+                          handleEditTask={() => setEditingTask(item)}
                           done={taskDoneList.includes(+item.id)}
                           important={item.important}
                         />
@@ -216,6 +239,13 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
           )}
         </Droppable>
       </DragDropContext>
+
+      {editingTask && (
+        <EditTaskModal
+          editingTask={editingTask}
+          handleClose={handleCloseModal}
+        />
+      )}
 
       <ActionBar actionText="Add task" handleAction={handleAddTask} />
     </>

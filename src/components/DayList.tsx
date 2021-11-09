@@ -2,12 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import DayItem from "../components/DayItem";
 import ActionBar from "../components/ActionBar";
-import Modal from "./Modal";
 
 const DayList = () => {
   const [days, setDays] = useState([]);
-
-  const [showModal, setShowModal] = useState(false);
 
   const handleAddDay = () => {};
 
@@ -26,21 +23,11 @@ const DayList = () => {
         ))}
       </DayListContainer>
 
-      <Modal
-        show={showModal}
-        title="Add day"
-        actionText="Add day"
-        handleAction={handleAddDay}
-        handleClose={() => setShowModal(false)}
-      >
-        hello
-      </Modal>
-
       <ActionBar
         navigationText="Home"
         navigationLink="/"
         actionText="Add day"
-        handleAction={() => setShowModal(true)}
+        handleAction={() => {}}
       />
     </>
   );

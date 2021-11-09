@@ -29,9 +29,9 @@ const Layout: React.FC = ({ children }) => {
         handleChangeTheme,
       }}
     >
+      <Background />
       <MainContainer>
         <GlobalStyle />
-        <Background />
         <Container>{children}</Container>
       </MainContainer>
     </ThemeProvider>
@@ -51,7 +51,7 @@ const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
 `;
 
 const Background = styled.div`
-  position: absolute;
+  position: fixed;
   height: 100%;
   width: 100%;
   z-index: -100;
@@ -60,8 +60,9 @@ const Background = styled.div`
 `;
 
 const MainContainer = styled.main`
+  display: flex;
+
   @media (min-width: 768px) {
-    display: flex;
     justify-content: center;
   }
 `;

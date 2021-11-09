@@ -12,6 +12,7 @@ interface TaskProps {
   dragHandleProps: Object;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onBlur: React.FocusEventHandler<HTMLTextAreaElement>;
+  handleEditTask: React.MouseEventHandler<HTMLButtonElement>;
   done: boolean;
   important: boolean;
 }
@@ -21,6 +22,7 @@ const Task: React.FC<TaskProps> = ({
   dragHandleProps,
   onClick,
   onBlur,
+  handleEditTask,
   done,
   important,
 }) => {
@@ -71,7 +73,9 @@ const Task: React.FC<TaskProps> = ({
             setShowEditButton(false);
           }}
         />
-        {showEditButton && <Icon icon={Edit} />}
+        <EditTaskButton show={showEditButton} onClick={handleEditTask}>
+          <Icon icon={Edit} />
+        </EditTaskButton>
         <DragHandleContainer {...dragHandleProps}>
           <Icon icon={DragHandle} colorLight />
         </DragHandleContainer>
@@ -87,7 +91,7 @@ const TaskContainer = styled.li`
 
 const Important = styled.div`
   & * {
-    color: red;
+    color: ${({ theme }) => theme.error};
   }
 `;
 
@@ -138,6 +142,20 @@ const TextInput = styled.textarea<{ done: boolean }>`
   &:focus {
     outline: none;
     user-select: auto;
+  }
+`;
+
+const EditTaskButton = styled.button<{ show: boolean }>`
+  display: ${({ show }) => (show ? "flex" : "none")};
+  background-color: transparent;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  padding-left: 10px;
+
+  @media (min-width: 768px) {
+    margin-right: 10px;
   }
 `;
 

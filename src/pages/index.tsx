@@ -5,7 +5,7 @@ import TaskList from "../components/TaskList";
 import Header from "../components/Header";
 
 const IndexPage: React.FC = () => {
-  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date().getTime());
   return (
     <>
       <Header themeButton />

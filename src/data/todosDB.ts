@@ -2,15 +2,17 @@ import Dexie, { IndexableType } from "dexie";
 import { compareDates, beforeToday } from "./dates";
 
 const db = new Dexie("TodoDB");
-const dbVersion = 1.2;
-db.version(dbVersion).stores({ tasks: "++id", options: "++id", days: "++id" });
+const dbVersion = 1.4;
+db.version(dbVersion).stores({ tasks: "++id,order", options: "++id" });
 
 export interface Task {
   id?: IndexableType;
   text: string;
   createdAt?: number;
-  date?: number;
-  important?: boolean;
+  date: number;
+  important: boolean;
+  done: boolean;
+  order: number;
 }
 
 export const getTaskListByDateFromDB = (
@@ -18,6 +20,7 @@ export const getTaskListByDateFromDB = (
   callback?: (tasks: Task[]) => void
 ): void => {
   db.table("tasks")
+    .orderBy("order")
     .filter((task) => compareDates(new Date(task.date), date))
     .toArray()
     .then((tasks) => {
@@ -29,6 +32,7 @@ export const getTaskListBeforeTodayFromDB = (
   callback?: (tasks: Task[]) => void
 ): void => {
   db.table("tasks")
+    .orderBy("order")
     .filter((task) => beforeToday(new Date(task.date)))
     .toArray()
     .then((tasks) => {
@@ -69,9 +73,24 @@ export const deleteTasksFromDB = (
     });
 };
 
+export const setTaskInDB = (
+  editedTask: Task,
+  callback?: () => void,
+  errorCallback?: () => void
+): void => {
+  db.table("tasks")
+    .put(editedTask)
+    .then(() => {
+      callback && callback();
+    })
+    .catch(() => {
+      errorCallback && errorCallback();
+    });
+};
+
 export const editTaskInDB = (
   id: number,
-  editedTask: Task,
+  editedTask: {},
   callback?: () => void,
   errorCallback?: () => void
 ): void => {

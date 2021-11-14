@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
 import {
   DragHandle,
@@ -11,8 +11,9 @@ interface TaskProps {
   text: string;
   dragHandleProps: Object;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
-  onBlur: React.FocusEventHandler<HTMLTextAreaElement>;
-  handleEditTask: React.MouseEventHandler<HTMLButtonElement>;
+  onBlur: (arg0: string) => void;
+  handleEditTask: (arg0: string) => void;
+  activeTaskTextarea: React.MutableRefObject<HTMLTextAreaElement>;
   done: boolean;
   important: boolean;
 }
@@ -23,15 +24,30 @@ const Task: React.FC<TaskProps> = ({
   onClick,
   onBlur,
   handleEditTask,
+  activeTaskTextarea,
   done,
   important,
 }) => {
   const [showEditButton, setShowEditButton] = useState(false);
 
+  const [taskText, setTaskText] = useState(text);
+
+  // Task item textarea ref to set focus on add task button click (for safari)
+  const taskTextarea = useRef(null);
+
+  useEffect(() => {
+    setTaskText(text);
+  }, [text]);
+
   const taskInput = useCallback((node: HTMLTextAreaElement) => {
     if (node !== null) {
-      textareaAutoHeight(node!);
-      if (!node.value) node.focus();
+      taskTextarea.current = node;
+      textareaAutoHeight(node);
+      if (!node.value) {
+        node.focus();
+        node.scrollIntoView();
+        activeTaskTextarea.current = node;
+      }
     }
   }, []);
 
@@ -55,7 +71,7 @@ const Task: React.FC<TaskProps> = ({
           id="text-input"
           rows={1}
           ref={taskInput}
-          defaultValue={text}
+          value={taskText}
           spellCheck="false"
           done={done}
           onKeyDown={(e) => {
@@ -65,15 +81,25 @@ const Task: React.FC<TaskProps> = ({
             let value = e.target.value;
             e.target.value = null;
             e.target.value = value;
+            activeTaskTextarea.current = taskTextarea.current;
             setShowEditButton(true);
           }}
-          onChange={(e) => textareaAutoHeight(e.target)}
-          onBlur={(e) => {
-            onBlur(e);
+          onChange={(e) => {
+            textareaAutoHeight(e.target);
+            setTaskText(e.target.value);
+          }}
+          onBlur={() => {
+            onBlur(taskText);
             setShowEditButton(false);
           }}
         />
-        <EditTaskButton show={showEditButton} onClick={handleEditTask}>
+        <EditTaskButton
+          show={showEditButton}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            handleEditTask(taskText);
+          }}
+        >
           <Icon icon={Edit} />
         </EditTaskButton>
         <DragHandleContainer {...dragHandleProps}>
@@ -134,7 +160,6 @@ const TextInput = styled.textarea<{ done: boolean }>`
   outline: none;
   resize: none;
   overflow: hidden;
-  user-select: none;
   background-color: transparent;
   text-decoration: ${({ done }) => (done ? "line-through" : "none")};
   transition: all 0.5s ease;

@@ -50,7 +50,7 @@ const DaySelectContainer = styled.div`
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  padding: 0 20px 0 20px;
+  padding: 0 40px 0 20px;
 
   &::-webkit-scrollbar {
     display: none;

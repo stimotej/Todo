@@ -40,7 +40,7 @@ const ActionBarContainer = styled.section`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: ${({ theme }) => theme.backdropColor};
+  background-color: ${({ theme }) => theme.actionBarColor};
   backdrop-filter: blur(30px);
   width: 100%;
   bottom: 0;
@@ -48,9 +48,7 @@ const ActionBarContainer = styled.section`
   transition: all 0.5s ease;
 
   @media (min-width: 768px) {
-    width: calc(60% - 40px);
-    right: 50%;
-    transform: translateX(50%);
+    padding: 0 calc(20% + 20px);
   }
 `;
 

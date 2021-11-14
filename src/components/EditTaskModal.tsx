@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import styled from "styled-components";
 import {
   CalendarToday,
@@ -47,12 +47,21 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
   );
   const [important, setImportant] = useState(editingTask.important);
 
+  const taskTextWarning = useRef(null);
+
+  const dateInput = useRef(null);
+
   const handleEditDone = () => {
+    if (text === "" || !text.trim()) {
+      taskTextWarning.current.innerHTML = "Task can't be empty";
+      return;
+    }
     const editedTask = {
-      id: editingTask.id,
       text: text,
       date: new Date(date).getTime(),
       important: important,
+      done: editingTask.done,
+      order: editingTask.order,
     };
     editTaskInDB(
       +editingTask.id,
@@ -74,14 +83,23 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <TaskTextArea
             ref={taskTextEdit}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            placeholder="Enter your task"
+            onKeyDown={(e) => {
+              e.key === "Enter" && e.preventDefault();
+            }}
+            onChange={(e) => {
+              if (e.target.value.trim()) taskTextWarning.current.innerHTML = "";
+              setText(e.target.value);
+            }}
           />
-          <DateAndTimeContainer>
+          <TaskTextWarning ref={taskTextWarning} />
+          <DateAndTimeContainer onClick={() => dateInput.current.focus()}>
             <DateSelect>
               <Icon icon={CalendarToday} margin />
               <Text>Date</Text>
               <DateInput
                 type="date"
+                ref={dateInput}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -119,6 +137,7 @@ const Backdrop = styled.div`
   z-index: 1;
   background-color: ${({ theme }) => theme.backdropColor};
   backdrop-filter: blur(5px);
+  overflow: hidden;
 `;
 
 const ModalContainer = styled.div`
@@ -151,10 +170,15 @@ const TaskTextArea = styled.textarea`
   outline: none;
   resize: none;
   overflow: hidden;
-  user-select: none;
   border-radius: 10px;
   padding: 10px;
   font-size: 1rem;
+`;
+
+const TaskTextWarning = styled.p`
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: ${({ theme }) => theme.error};
 `;
 
 const DateAndTimeContainer = styled.div`

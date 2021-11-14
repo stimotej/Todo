@@ -17,19 +17,21 @@ const lightTheme = {
   success: "#30d158",
   textLight: "rgba(0, 0, 0, 0.5)",
   divider: "rgba(0, 0, 0, 0.2)",
-  backdropColor: "rgba(238, 238, 238, 0.4)",
+  actionBarColor: "rgba(245, 245, 245, 0.4)",
+  backdropColor: "rgba(189, 189, 189, 0.4)",
 };
 
 const darkTheme = {
-  background: "#424242",
-  main: "#757575",
+  background: "#212121",
+  main: "#424242",
   text: "#FFFFFF",
-  accent: "#FFFFFF",
+  accent: "#E0E0E0",
   accentText: "#000000",
   error: "#B00020",
   success: "#30d158",
   textLight: "rgba(255, 255, 255, 0.5)",
   divider: "rgba(255, 255, 255, 0.2)",
+  actionBarColor: "rgba(33, 33, 33, 0.4)",
   backdropColor: "rgba(66, 66, 66, 0.4)",
 };
 

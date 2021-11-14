@@ -14,6 +14,9 @@ module.exports = {
       resolve: "gatsby-plugin-manifest",
       options: {
         icon: "src/images/todo_maskable_icon_x512.png",
+        icon_options: {
+          purpose: `any maskable`,
+        },
         name: `Todo`,
         short_name: `Todo`,
         start_url: `/`,

@@ -22,33 +22,45 @@ import {
 import ActionBar from "./ActionBar";
 import { compareDates, getDayName } from "../data/dates";
 import EditTaskModal from "./EditTaskModal";
+import {
+  getIdListOfDoneTasks,
+  toggleTaskDone,
+  getListOfNotDoneTasks,
+  getTaskListWithoutTask,
+  editTaskText,
+  moveTask,
+  resetTasksOrder,
+} from "../data/taskList";
 
 interface TaskListProps {
   selectedDay: number;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
-  const [taskDoneList, setTaskDoneList] = useState<number[]>([]);
+  // Task list state that holds all tasks
   const [taskList, setTaskList] = useState<Task[]>([]);
+  // Editing task state that opens modal and gives it task data
+  const [editingTask, setEditingTask] = useState(null);
 
   // taskList ref for getting current value of state inside setTimeout
   const taskListRef = useRef(taskList);
   taskListRef.current = taskList;
 
-  // taskDoneList ref for getting current value of state inside setTimeout
-  const taskDoneListRef = useRef(taskDoneList);
-  taskDoneListRef.current = taskDoneList;
+  // Store timeout id so setTimeout can be cleared
+  let timeoutID = useRef<NodeJS.Timeout>(null);
 
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout>();
-
+  // True if min-width is 768px
   const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
 
-  const [editingTask, setEditingTask] = useState(null);
+  // Get ref of current active task item textarea
+  const activeTaskTextarea = useRef(null);
 
   useEffect(() => {
+    // Check if browser supports indexedDB
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
 
+    // If selected day is 0 get days before today and if it is not get tasks from selected day
     if (selectedDay === 0)
       getTaskListBeforeTodayFromDB((task) => {
         setTaskList(task);
@@ -61,117 +73,83 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
 
   // If there are checked tasks delete them onBeforeUnload
   useBeforeunload(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      deleteTasksFromDB(taskDoneList);
+    if (timeoutID.current) {
+      clearTimeout(timeoutID.current);
+      deleteTasksFromDB(getIdListOfDoneTasks(taskList));
     }
   });
 
   // Remove task and update state
   const handleSetTaskDone = (id: number) => {
-    let taskDoneListCopy = [...taskDoneList];
-
-    // If checked id doesn't exist in taskDoneList add it otherwise delete it
-    if (!taskDoneList.includes(id)) taskDoneListCopy.push(id);
-    else {
-      let index = taskDoneListCopy.findIndex((taskDone) => taskDone === id);
-      taskDoneListCopy.splice(index, 1);
-    }
-
     // If timeout is already running clear it
-    timeoutId && clearTimeout(timeoutId);
+    timeoutID.current && clearTimeout(timeoutID.current);
 
-    // Start timeout and after 3s delete selected tasks
-    let tID =
-      taskDoneListCopy.length === 0
+    // Update taskList with task marked as done
+    setTaskList(toggleTaskDone(taskList, id));
+
+    // Get list of tasks marked as done
+    let idListOfDoneTasks = getIdListOfDoneTasks(taskList);
+
+    // Start timeout and after 3s delete marked tasks
+    timeoutID.current =
+      idListOfDoneTasks.length === 0
         ? null
         : setTimeout(() => {
-            deleteTasksFromDB(taskDoneListRef.current, () => {
-              let taskListCopy = [...taskListRef.current];
-
-              taskDoneListRef.current.forEach((id) => {
-                let index = taskListCopy.findIndex((item) => item.id === id);
-                taskListCopy.splice(index, 1);
-              });
-
-              setTaskList(taskListCopy);
-
-              setTaskDoneList([]);
-              setTimeoutId(null);
+            deleteTasksFromDB(idListOfDoneTasks, () => {
+              // Update taskList to all tasks not marked as done
+              setTaskList(getListOfNotDoneTasks(taskListRef.current));
+              // Clear timeout id
+              timeoutID.current = null;
             });
           }, 3000);
-    setTimeoutId(tID);
-    setTaskDoneList(taskDoneListCopy);
   };
+
+  // Callback for editingTask
+  // If edit task button clicked wait until editingTask state is set than blur
+  useEffect(() => {
+    activeTaskTextarea.current && activeTaskTextarea.current.blur();
+  }, [editingTask]);
 
   // Edit task in db and update state
-  const handleEditTaskText = (textarea: HTMLTextAreaElement, id: number) => {
+  const handleEditTaskText = (text: string, id: number) => {
     // Check if input is empty or just spaces
     // If it is delete from db and update state
-    if (textarea.value === "" || !textarea.value.trim())
-      deleteTasksFromDB([id], () => {
-        let taskListCopy = [...taskList];
-        const index = taskListCopy.findIndex((item) => item.id === id);
-        taskListCopy.splice(index, 1);
-        setTaskList(taskListCopy);
-      });
-    else {
-      const editedTask = {
-        text: textarea.value,
-      };
-      editTaskInDB(id, editedTask, () => {
-        let taskListCopy = [...taskList];
-        let index = taskListCopy.findIndex((item) => item.id === id);
-        taskListCopy[index] = { id, ...taskListCopy[index], ...editedTask };
-        setTaskList(taskListCopy);
-      });
-    }
-  };
 
-  const handleCloseModal = (editedTask: Task) => {
-    if (editedTask) {
-      let taskListCopy = [...taskList];
-      let index = taskListCopy.findIndex((item) => item.id === editedTask.id);
-      taskListCopy[index] = { ...taskListCopy[index], ...editedTask };
-      console.log({ ...editedTask, ...taskListCopy[index] });
-      setTaskList(taskListCopy);
+    // If task text is empty and edit task modal not opened delete task
+    if ((text === "" || !text.trim()) && !editingTask) {
+      deleteTasksFromDB([id], () => {
+        // Set task list without deleted empty item
+        setTaskList(getTaskListWithoutTask(taskList, id));
+      });
+    } else {
+      // Edit text of the task
+      editTaskInDB(id, { text: text }, () => {
+        // Set task list with changed tasks text
+        setTaskList(editTaskText(taskList, id, text));
+      });
     }
-    setEditingTask(null);
   };
 
   const handleOnDragEnd = (result: DropResult) => {
     // If item is dragged outside of droppable return
     if (!result.destination) return;
 
+    // Make copy of task list
     let taskListCopy = [...taskList];
 
-    // Move item to destination index
-    let [reorderedTask] = taskListCopy.splice(result.source.index, 1);
-    taskListCopy.splice(result.destination.index, 0, reorderedTask);
+    // Move item to destination index in task list
+    taskListCopy = moveTask(
+      taskList,
+      result.source.index,
+      result.destination.index
+    );
 
-    // Get indexes of completed tasks when list is reordered
-    let taskDoneListIndexes =
-      timeoutId &&
-      taskDoneList.map((taskDoneId) =>
-        taskListCopy.findIndex((item) => item.id === taskDoneId)
-      );
+    // Reset task order from 1 to n of tasks to keep order in db
+    taskListCopy = resetTasksOrder(taskListCopy);
 
-    // Sort IDs to keep items sorted in db
-    let idList = taskListCopy.map((item) => item.id);
-    // Add + in front of Indexable a, b to convert them to numbers
-    idList.sort((a, b) => +a - +b);
-    taskListCopy.forEach((item, index) => (item.id = idList[index]));
-
-    // Store new taskList IDs to taskDoneList
-    if (timeoutId) {
-      const newTaskDoneList = taskDoneListIndexes.map(
-        (item) => +taskListCopy[item].id
-      );
-      setTaskDoneList(newTaskDoneList);
-    }
-
+    // Set task list state
     setTaskList(taskListCopy);
-
+    // Store reordered tasks to db
     setTasksInDB(taskListCopy);
   };
 
@@ -182,6 +160,8 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
       date: selectedDay,
       text: "",
       important: false,
+      done: false,
+      order: taskList.length,
     };
     addTaskToDB(newTask, (id) => {
       taskListCopy.push({ id, ...newTask });
@@ -189,9 +169,37 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     });
   };
 
+  const handleCloseModal = (editedTask: Task) => {
+    // Check if task was edited
+    if (editedTask) {
+      let taskListCopy = [...taskList];
+
+      const index = taskListCopy.findIndex(
+        (item) => item.id === editingTask.id
+      );
+
+      // If date is changed delete task from taskList if not update it
+      if (!compareDates(new Date(editingTask.date), new Date(editedTask.date)))
+        taskListCopy.splice(index, 1);
+      else taskListCopy[index] = { ...editingTask, ...editedTask };
+
+      setTaskList(taskListCopy);
+    }
+    // If cancel was clicked when editing empty task delete it
+    else if (editingTask.text === "" || !editingTask.text.trim())
+      deleteTasksFromDB([editingTask.id], () => {
+        setTaskList(getTaskListWithoutTask(taskList, editingTask.id));
+      });
+    // Close the modal
+    setEditingTask(null);
+  };
+
   return (
     <>
-      <DragDropContext onDragEnd={handleOnDragEnd}>
+      <DragDropContext
+        onDragEnd={handleOnDragEnd}
+        onDragStart={() => activeTaskTextarea.current.blur()}
+      >
         <ListTitle>
           {selectedDay === 0
             ? "History"
@@ -210,8 +218,8 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
               ) : (
                 taskList.map((item, index) => (
                   <Draggable
-                    key={item.createdAt}
-                    draggableId={item.createdAt.toString()}
+                    key={+item.id}
+                    draggableId={item.id.toString()}
                     index={index}
                   >
                     {(provided) => (
@@ -224,9 +232,12 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                           text={item.text}
                           dragHandleProps={provided.dragHandleProps}
                           onClick={() => handleSetTaskDone(+item.id)}
-                          onBlur={(e) => handleEditTaskText(e.target, +item.id)}
-                          handleEditTask={() => setEditingTask(item)}
-                          done={taskDoneList.includes(+item.id)}
+                          onBlur={(text) => handleEditTaskText(text, +item.id)}
+                          handleEditTask={(currentText) => {
+                            setEditingTask({ ...item, text: currentText });
+                          }}
+                          activeTaskTextarea={activeTaskTextarea}
+                          done={item.done}
                           important={item.important}
                         />
                       </div>
@@ -247,7 +258,9 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
         />
       )}
 
-      <ActionBar actionText="Add task" handleAction={handleAddTask} />
+      {selectedDay !== 0 && (
+        <ActionBar actionText="Add task" handleAction={handleAddTask} />
+      )}
     </>
   );
 };

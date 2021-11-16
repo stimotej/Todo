@@ -22,18 +22,29 @@ export const getTaskListByDateFromDB = (
   db.table("tasks")
     .orderBy("order")
     .filter((task) => compareDates(new Date(task.date), date))
+    .filter((task) => !task.done)
     .toArray()
     .then((tasks) => {
       callback && callback(tasks);
     });
 };
 
-export const getTaskListBeforeTodayFromDB = (
+export const getTaskListFromDB = (callback?: (tasks: Task[]) => void): void => {
+  db.table("tasks")
+    .orderBy("order")
+    .filter((task) => !task.done)
+    .toArray()
+    .then((tasks) => {
+      callback && callback(tasks);
+    });
+};
+
+export const getDoneTaskListFromDB = (
   callback?: (tasks: Task[]) => void
 ): void => {
   db.table("tasks")
     .orderBy("order")
-    .filter((task) => beforeToday(new Date(task.date)))
+    .filter((task) => task.done)
     .toArray()
     .then((tasks) => {
       callback && callback(tasks);

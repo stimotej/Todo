@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "gatsby";
-import { ChevronLeft, Add } from "@styled-icons/material-outlined";
+import { StyledIcon } from "@styled-icons/styled-icon";
+import { ChevronLeft } from "@styled-icons/material-outlined";
 import styled from "styled-components";
 import Icon from "./Icon";
 
@@ -8,6 +9,7 @@ interface ActionBarProps {
   navigationText?: string;
   navigationLink?: string;
   actionText?: string;
+  actionIcon?: StyledIcon;
   handleAction?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -15,6 +17,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
   navigationText,
   navigationLink,
   actionText,
+  actionIcon,
   handleAction,
 }) => {
   return (
@@ -27,7 +30,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
       )}
       {actionText && (
         <Button onClick={handleAction} alignRight={!navigationText}>
-          <Icon icon={Add} margin />
+          {actionIcon && <Icon icon={actionIcon} margin />}
           {actionText}
         </Button>
       )}

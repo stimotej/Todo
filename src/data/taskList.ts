@@ -1,5 +1,13 @@
+export const getListOfDoneTasks = (taskList) => {
+  return [...taskList].filter((task) => task.done);
+};
+
 export const getIdListOfDoneTasks = (taskList) => {
   return [...taskList].filter((task) => task.done).map((task) => task.id);
+};
+
+export const getListOfNotDoneTasks = (taskList) => {
+  return [...taskList].filter((task) => !task.done);
 };
 
 export const toggleTaskDone = (taskList, id) => {
@@ -7,10 +15,6 @@ export const toggleTaskDone = (taskList, id) => {
   const index = taskListCopy.findIndex((item) => item.id === id);
   taskListCopy[index].done = !taskListCopy[index].done;
   return taskListCopy;
-};
-
-export const getListOfNotDoneTasks = (taskList) => {
-  return [...taskList].filter((task) => !task.done);
 };
 
 export const getTaskListWithoutTask = (taskList, id) => {

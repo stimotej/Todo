@@ -12,25 +12,28 @@ import TaskItem from "../components/TaskItem";
 
 import {
   getTaskListByDateFromDB,
-  getTaskListBeforeTodayFromDB,
+  getTaskListFromDB,
   deleteTasksFromDB,
   editTaskInDB,
   setTasksInDB,
   addTaskToDB,
   Task,
+  getDoneTaskListFromDB,
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
 import { compareDates, getDayName } from "../data/dates";
 import EditTaskModal from "./EditTaskModal";
 import {
-  getIdListOfDoneTasks,
+  getListOfDoneTasks,
   toggleTaskDone,
   getListOfNotDoneTasks,
   getTaskListWithoutTask,
   editTaskText,
   moveTask,
   resetTasksOrder,
+  getIdListOfDoneTasks,
 } from "../data/taskList";
+import { Add, Delete } from "@styled-icons/material-outlined";
 
 interface TaskListProps {
   selectedDay: number;
@@ -60,10 +63,15 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
 
-    // If selected day is 0 get days before today and if it is not get tasks from selected day
+    // If selected day is 0 get done tasks, if day is 1 get days before today and
+    // if it is not get tasks from selected day
     if (selectedDay === 0)
-      getTaskListBeforeTodayFromDB((task) => {
-        setTaskList(task);
+      getDoneTaskListFromDB((tasks) => {
+        setTaskList(tasks);
+      });
+    else if (selectedDay === 1)
+      getTaskListFromDB((tasks) => {
+        setTaskList(tasks);
       });
     else
       getTaskListByDateFromDB(new Date(selectedDay), (tasks) => {
@@ -71,11 +79,11 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
       });
   }, [selectedDay]);
 
-  // If there are checked tasks delete them onBeforeUnload
+  // If there are checked tasks update DB onBeforeUnload
   useBeforeunload(() => {
     if (timeoutID.current) {
       clearTimeout(timeoutID.current);
-      deleteTasksFromDB(getIdListOfDoneTasks(taskList));
+      setTasksInDB(getListOfDoneTasks(taskList));
     }
   });
 
@@ -87,21 +95,33 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     // Update taskList with task marked as done
     setTaskList(toggleTaskDone(taskList, id));
 
-    // Get list of tasks marked as done
-    let idListOfDoneTasks = getIdListOfDoneTasks(taskList);
+    // Check is done tasks tab is selected
+    const isDoneTasksSelected = selectedDay === 0;
 
-    // Start timeout and after 3s delete marked tasks
+    // Get list of tasks marked as done/not done
+    let listOfTasks = isDoneTasksSelected
+      ? getListOfNotDoneTasks(taskList)
+      : getListOfDoneTasks(taskList);
+
+    // Start timeout and after 3s/500ms update state and DB
     timeoutID.current =
-      idListOfDoneTasks.length === 0
+      listOfTasks.length === 0
         ? null
-        : setTimeout(() => {
-            deleteTasksFromDB(idListOfDoneTasks, () => {
-              // Update taskList to all tasks not marked as done
-              setTaskList(getListOfNotDoneTasks(taskListRef.current));
-              // Clear timeout id
-              timeoutID.current = null;
-            });
-          }, 3000);
+        : setTimeout(
+            () => {
+              setTasksInDB(listOfTasks, () => {
+                // Update taskList to all tasks not marked/marked as done
+                setTaskList(
+                  isDoneTasksSelected
+                    ? getListOfDoneTasks(taskListRef.current)
+                    : getListOfNotDoneTasks(taskListRef.current)
+                );
+                // Clear timeout id
+                timeoutID.current = null;
+              });
+            },
+            isDoneTasksSelected ? 500 : 3000
+          );
   };
 
   // Callback for editingTask
@@ -153,7 +173,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     setTasksInDB(taskListCopy);
   };
 
-  const handleAddTask = () => {
+  const handleAddTask: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     let taskListCopy = [...taskList];
     const newTask = {
       createdAt: new Date().getTime(),
@@ -166,6 +186,14 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     addTaskToDB(newTask, (id) => {
       taskListCopy.push({ id, ...newTask });
       setTaskList(taskListCopy);
+    });
+    activeTaskTextarea.current && activeTaskTextarea.current.focus();
+  };
+
+  const handleDeleteDoneTasks = () => {
+    const idListOfDoneTasks = getIdListOfDoneTasks(taskList);
+    deleteTasksFromDB(idListOfDoneTasks, () => {
+      setTaskList([]);
     });
   };
 
@@ -198,11 +226,15 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     <>
       <DragDropContext
         onDragEnd={handleOnDragEnd}
-        onDragStart={() => activeTaskTextarea.current.blur()}
+        onDragStart={() =>
+          activeTaskTextarea.current && activeTaskTextarea.current.blur()
+        }
       >
         <ListTitle>
           {selectedDay === 0
-            ? "History"
+            ? "Done tasks"
+            : selectedDay === 1
+            ? "All tasks"
             : compareDates(new Date(selectedDay), new Date())
             ? "Today"
             : getDayName(new Date(selectedDay))}
@@ -229,7 +261,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                         ref={provided.innerRef}
                       >
                         <TaskItem
-                          text={item.text}
+                          task={item}
                           dragHandleProps={provided.dragHandleProps}
                           onClick={() => handleSetTaskDone(+item.id)}
                           onBlur={(text) => handleEditTaskText(text, +item.id)}
@@ -237,8 +269,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                             setEditingTask({ ...item, text: currentText });
                           }}
                           activeTaskTextarea={activeTaskTextarea}
-                          done={item.done}
-                          important={item.important}
+                          showDate={selectedDay === 1}
                         />
                       </div>
                     )}
@@ -258,8 +289,17 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
         />
       )}
 
-      {selectedDay !== 0 && (
-        <ActionBar actionText="Add task" handleAction={handleAddTask} />
+      {selectedDay == 0 ? (
+        <ActionBar
+          actionText="Delete done tasks"
+          handleAction={handleDeleteDoneTasks}
+        />
+      ) : (
+        <ActionBar
+          actionText="Add task"
+          actionIcon={Add}
+          handleAction={handleAddTask}
+        />
       )}
     </>
   );

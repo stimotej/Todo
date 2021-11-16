@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { getThisWeekDays, dayNames, compareDates } from "../data/dates";
-import { History } from "@styled-icons/material-outlined/History";
+import { History, Done } from "@styled-icons/material-outlined";
 import Icon from "../components/Icon";
 
 interface DaySelectProps {
@@ -20,7 +20,14 @@ const DaySelect: React.FC<DaySelectProps> = ({
           onClick={() => setSelectedDay(0)}
           selected={selectedDay === 0}
         >
-          <Icon icon={History} />
+          <Icon icon={Done} />
+        </DayButton>
+        <DayButton
+          onClick={() => setSelectedDay(1)}
+          selected={selectedDay === 1}
+        >
+          <Title>All</Title>
+          <Title>Tasks</Title>
         </DayButton>
         {getThisWeekDays().map((day, index) => (
           <DayButton

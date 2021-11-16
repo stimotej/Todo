@@ -7,6 +7,7 @@ import {
 } from "@styled-icons/material-outlined";
 import { editTaskInDB, Task } from "../data/todosDB";
 import Icon from "./Icon";
+import Textarea from "./Textarea";
 
 interface EditTaskModalProps {
   editingTask: Task;
@@ -33,22 +34,17 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
     };
   }, []);
 
-  const taskTextEdit = useCallback((node: HTMLTextAreaElement) => {
-    if (node !== null) {
-      node.style.height = "auto";
-      node.style.height = `${node.scrollHeight}px`;
-      if (!node.value) node.focus();
-    }
-  }, []);
-
+  // Text, date and important states for edit task modal input fields
   const [text, setText] = useState(editingTask.text);
   const [date, setDate] = useState(
     new Date(editingTask.date).toISOString().substr(0, 10)
   );
   const [important, setImportant] = useState(editingTask.important);
 
+  // Ref for showing and hiding task textarea warning
   const taskTextWarning = useRef(null);
 
+  // Ref for date input to focus input on its container click
   const dateInput = useRef(null);
 
   const handleEditDone = () => {
@@ -80,18 +76,17 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
       <ModalContainer>
         <Title>Edit task</Title>
         <ModalBody>
-          <TaskTextArea
-            ref={taskTextEdit}
-            value={text}
-            placeholder="Enter your task"
-            onKeyDown={(e) => {
-              e.key === "Enter" && e.preventDefault();
-            }}
-            onChange={(e) => {
-              if (e.target.value.trim()) taskTextWarning.current.innerHTML = "";
-              setText(e.target.value);
-            }}
-          />
+          <TextareaContainer>
+            <Textarea
+              placeholder="Enter your task"
+              value={text}
+              onChange={(textarea) => {
+                if (textarea.value.trim())
+                  taskTextWarning.current.innerHTML = "";
+                setText(textarea.value);
+              }}
+            />
+          </TextareaContainer>
           <TaskTextWarning ref={taskTextWarning} />
           <DateAndTimeContainer onClick={() => dateInput.current.focus()}>
             <DateSelect>
@@ -137,7 +132,6 @@ const Backdrop = styled.div`
   z-index: 1;
   background-color: ${({ theme }) => theme.backdropColor};
   backdrop-filter: blur(5px);
-  overflow: hidden;
 `;
 
 const ModalContainer = styled.div`
@@ -162,17 +156,11 @@ const ModalBody = styled.div`
   margin: 20px 0;
 `;
 
-const TaskTextArea = styled.textarea`
+const TextareaContainer = styled.div`
   width: 100%;
   background-color: ${({ theme }) => theme.main};
-  color: ${({ theme }) => theme.text};
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: hidden;
   border-radius: 10px;
-  padding: 10px;
-  font-size: 1rem;
+  padding: 20px;
 `;
 
 const TaskTextWarning = styled.p`

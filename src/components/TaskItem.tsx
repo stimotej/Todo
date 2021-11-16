@@ -1,110 +1,97 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import {
   DragHandle,
   PriorityHigh,
   Edit,
 } from "@styled-icons/material-outlined";
+import { formatDate } from "../data/dates";
+import { Task } from "../data/todosDB";
 import Icon from "./Icon";
+import Textarea from "./Textarea";
 
 interface TaskProps {
-  text: string;
+  task: Task;
   dragHandleProps: Object;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onBlur: (arg0: string) => void;
   handleEditTask: (arg0: string) => void;
   activeTaskTextarea: React.MutableRefObject<HTMLTextAreaElement>;
-  done: boolean;
-  important: boolean;
+  showDate: boolean;
 }
 
-const Task: React.FC<TaskProps> = ({
-  text,
+const TaskItem: React.FC<TaskProps> = ({
+  task,
   dragHandleProps,
   onClick,
   onBlur,
   handleEditTask,
   activeTaskTextarea,
-  done,
-  important,
+  showDate,
 }) => {
   const [showEditButton, setShowEditButton] = useState(false);
 
-  const [taskText, setTaskText] = useState(text);
+  const [taskText, setTaskText] = useState(task.text);
 
   // Task item textarea ref to set focus on add task button click (for safari)
   const taskTextarea = useRef(null);
 
   useEffect(() => {
-    setTaskText(text);
-  }, [text]);
+    setTaskText(task.text);
+  }, [task.text]);
 
-  const taskInput = useCallback((node: HTMLTextAreaElement) => {
-    if (node !== null) {
-      taskTextarea.current = node;
-      textareaAutoHeight(node);
-      if (!node.value) {
-        node.focus();
-        node.scrollIntoView();
-        activeTaskTextarea.current = node;
-      }
+  useEffect(() => {
+    if (taskTextarea.current) {
+      taskTextarea.current.style.height = "auto";
+      taskTextarea.current.style.height = `${taskTextarea.current.scrollHeight}px`;
     }
-  }, []);
-
-  const textareaAutoHeight = (textarea: HTMLTextAreaElement) => {
-    textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  };
+  }, [showEditButton]);
 
   return (
     <TaskContainer>
-      <CheckboxContainer onClick={onClick}>
-        <Checkbox done={done} />
+      <CheckboxContainer>
+        <CheckboxButton onClick={onClick}>
+          <Checkbox done={task.done} />
+        </CheckboxButton>
       </CheckboxContainer>
       <TextContainer>
-        {important && (
-          <Important>
-            <Icon icon={PriorityHigh} />
-          </Important>
-        )}
-        <TextInput
-          id="text-input"
-          rows={1}
-          ref={taskInput}
-          value={taskText}
-          spellCheck="false"
-          done={done}
-          onKeyDown={(e) => {
-            e.key === "Enter" && e.preventDefault();
-          }}
-          onFocus={(e) => {
-            let value = e.target.value;
-            e.target.value = null;
-            e.target.value = value;
-            activeTaskTextarea.current = taskTextarea.current;
-            setShowEditButton(true);
-          }}
-          onChange={(e) => {
-            textareaAutoHeight(e.target);
-            setTaskText(e.target.value);
-          }}
-          onBlur={() => {
-            onBlur(taskText);
-            setShowEditButton(false);
-          }}
-        />
-        <EditTaskButton
-          show={showEditButton}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => {
-            handleEditTask(taskText);
-          }}
-        >
-          <Icon icon={Edit} />
-        </EditTaskButton>
-        <DragHandleContainer {...dragHandleProps}>
-          <Icon icon={DragHandle} colorLight />
-        </DragHandleContainer>
+        <TextRow>
+          {task.important && (
+            <Important>
+              <Icon icon={PriorityHigh} />
+            </Important>
+          )}
+          <Textarea
+            getRef={(ref) => (taskTextarea.current = ref)}
+            done={task.done}
+            value={taskText}
+            onFocus={() => {
+              activeTaskTextarea.current = taskTextarea.current;
+              setShowEditButton(true);
+            }}
+            onChange={(textarea) => {
+              setTaskText(textarea.value);
+            }}
+            onBlur={() => {
+              onBlur(taskText);
+              setShowEditButton(false);
+            }}
+          />
+          <EditTaskContainer show={showEditButton}>
+            <EditTaskButton
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                handleEditTask(taskText);
+              }}
+            >
+              <Icon icon={Edit} />
+            </EditTaskButton>
+          </EditTaskContainer>
+          <DragHandleContainer {...dragHandleProps}>
+            <Icon icon={DragHandle} colorLight />
+          </DragHandleContainer>
+        </TextRow>
+        {showDate && <TaskDate>{formatDate(new Date(task.date))}</TaskDate>}
       </TextContainer>
     </TaskContainer>
   );
@@ -121,11 +108,15 @@ const Important = styled.div`
   }
 `;
 
-const CheckboxContainer = styled.button`
-  padding: 0 16px 0 16px;
+const CheckboxContainer = styled.div`
+  padding: 8px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+`;
+
+const CheckboxButton = styled.button`
+  padding: 16px;
   background: none;
   border: none;
   cursor: pointer;
@@ -148,32 +139,29 @@ const TextContainer = styled.div`
   box-sizing: border-box;
   user-select: none;
   display: flex;
+  flex-direction: column;
   transition: all 0.5s ease;
 `;
 
-const TextInput = styled.textarea<{ done: boolean }>`
-  width: 100%;
-  font-size: 1rem;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text};
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  background-color: transparent;
-  text-decoration: ${({ done }) => (done ? "line-through" : "none")};
-  transition: all 0.5s ease;
-
-  &:focus {
-    outline: none;
-    user-select: auto;
-  }
+const TextRow = styled.div`
+  display: flex;
 `;
 
-const EditTaskButton = styled.button<{ show: boolean }>`
+const TaskDate = styled.p`
+  margin-top: 10px;
+  margin-bottom: -10px;
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.textLight};
+`;
+
+const EditTaskContainer = styled.div<{ show: boolean }>`
   display: ${({ show }) => (show ? "flex" : "none")};
+  align-items: start;
+  justify-content: center;
+`;
+
+const EditTaskButton = styled.button`
   background-color: transparent;
-  align-items: center;
   justify-content: center;
   cursor: pointer;
   border: none;
@@ -195,4 +183,4 @@ const DragHandleContainer = styled.div`
   }
 `;
 
-export default Task;
+export default TaskItem;

@@ -90,7 +90,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <TaskTextWarning ref={taskTextWarning} />
           <DateAndTimeContainer onClick={() => dateInput.current.focus()}>
             <DateSelect>
-              <Icon icon={CalendarToday} margin />
+              <Icon icon={CalendarToday} marginRight />
               <Text>Date</Text>
               <DateInput
                 type="date"
@@ -107,7 +107,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
             </TimeSelect> */}
           </DateAndTimeContainer>
           <ImportantSwitch onClick={() => setImportant(!important)}>
-            <Icon icon={PriorityHigh} margin />
+            <Icon icon={PriorityHigh} marginRight />
             <Text>Important</Text>
             <ToggleSwitch active={important}>
               <div />

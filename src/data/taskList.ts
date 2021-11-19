@@ -40,3 +40,11 @@ export const resetTasksOrder = (taskList) => {
   taskListCopy.forEach((item, index) => (item.order = index + 1));
   return taskListCopy;
 };
+
+export const getAllTaskDates = (taskList) => {
+  let dates = [];
+  taskList.forEach((task) => {
+    if (!(task.date in dates)) dates.push(task.date);
+  });
+  return dates;
+};

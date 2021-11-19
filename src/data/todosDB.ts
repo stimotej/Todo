@@ -1,5 +1,5 @@
 import Dexie, { IndexableType } from "dexie";
-import { compareDates, beforeToday } from "./dates";
+import { compareDates } from "./dates";
 
 const db = new Dexie("TodoDB");
 const dbVersion = 1.4;

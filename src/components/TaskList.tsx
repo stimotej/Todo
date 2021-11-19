@@ -21,7 +21,7 @@ import {
   getDoneTaskListFromDB,
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
-import { compareDates, getDayName } from "../data/dates";
+import { compareDates, formatDate, getDayName } from "../data/dates";
 import EditTaskModal from "./EditTaskModal";
 import {
   getListOfDoneTasks,
@@ -33,7 +33,7 @@ import {
   resetTasksOrder,
   getIdListOfDoneTasks,
 } from "../data/taskList";
-import { Add, Delete } from "@styled-icons/material-outlined";
+import { Add } from "@styled-icons/material-outlined";
 
 interface TaskListProps {
   selectedDay: number;
@@ -77,6 +77,14 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
       getTaskListByDateFromDB(new Date(selectedDay), (tasks) => {
         setTaskList(tasks);
       });
+
+    return () => {
+      if (timeoutID.current) {
+        clearTimeout(timeoutID.current);
+        if (selectedDay === 0) setTasksInDB(getListOfDoneTasks(taskList));
+        else setTasksInDB(getListOfNotDoneTasks(taskList));
+      }
+    };
   }, [selectedDay]);
 
   // If there are checked tasks update DB onBeforeUnload
@@ -120,7 +128,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                 timeoutID.current = null;
               });
             },
-            isDoneTasksSelected ? 500 : 3000
+            isDoneTasksSelected ? 500 : 2000
           );
   };
 
@@ -177,7 +185,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     let taskListCopy = [...taskList];
     const newTask = {
       createdAt: new Date().getTime(),
-      date: selectedDay,
+      date: selectedDay === 1 ? new Date().getTime() : selectedDay,
       text: "",
       important: false,
       done: false,
@@ -207,7 +215,10 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
       );
 
       // If date is changed delete task from taskList if not update it
-      if (!compareDates(new Date(editingTask.date), new Date(editedTask.date)))
+      if (
+        !compareDates(new Date(editingTask.date), new Date(editedTask.date)) &&
+        !(selectedDay in [0, 1])
+      )
         taskListCopy.splice(index, 1);
       else taskListCopy[index] = { ...editingTask, ...editedTask };
 
@@ -237,7 +248,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
             ? "All tasks"
             : compareDates(new Date(selectedDay), new Date())
             ? "Today"
-            : getDayName(new Date(selectedDay))}
+            : formatDate(new Date(selectedDay))}
         </ListTitle>
         <Droppable droppableId="tasks-droppable">
           {(provided) => (

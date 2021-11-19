@@ -6,28 +6,37 @@ import { ThemeType } from "../themes/theme";
 
 interface IconProps {
   icon: StyledIcon;
-  margin?: boolean;
+  marginLeft?: boolean;
+  marginRight?: boolean;
   colorLight?: boolean;
   theme?: ThemeType;
 }
 
-const Icon: React.FC<IconProps> = ({ icon, margin, colorLight, theme }) => {
+const Icon: React.FC<IconProps> = ({
+  icon,
+  marginLeft,
+  marginRight,
+  colorLight,
+  theme,
+}) => {
   console.log();
 
   return (
     <IconStyled
       as={icon}
-      margin={margin}
+      marginLeft={marginLeft}
+      marginRight={marginRight}
       color={colorLight ? theme.textLight : theme.text}
     />
   );
 };
 
-const IconStyled = styled.div<{ margin: boolean }>`
+const IconStyled = styled.div<{ marginLeft: boolean; marginRight: boolean }>`
   background-color: transparent;
   width: 24px;
   height: 24px;
-  margin-right: ${({ margin }) => (margin ? "10px" : "0")};
+  margin-left: ${({ marginLeft }) => (marginLeft ? "10px" : "0")};
+  margin-right: ${({ marginRight }) => (marginRight ? "10px" : "0")};
   transition: all 0.5s ease;
 `;
 

@@ -8,6 +8,20 @@ const dayFullNames = [
   "Friday",
   "Saturday",
 ];
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 export const getThisWeekDays = () => {
   const today = new Date();
@@ -56,4 +70,4 @@ export const notInThisWeek = (date: Date) => {
   return true;
 };
 
-export { dayNames, dayFullNames };
+export { dayNames, dayFullNames, monthNames };

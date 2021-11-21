@@ -8,6 +8,8 @@ import {
 import { editTaskInDB, Task } from "../data/todosDB";
 import Icon from "./Icon";
 import Textarea from "./Textarea";
+import { useMediaQuery } from "react-responsive";
+import { motion } from "framer-motion";
 
 interface EditTaskModalProps {
   editingTask: Task;
@@ -41,6 +43,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
   );
   const [important, setImportant] = useState(editingTask.important);
 
+  // True if min-width is 768px
+  const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
+
   // Ref for showing and hiding task textarea warning
   const taskTextWarning = useRef(null);
 
@@ -72,8 +77,20 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
   };
 
   return (
-    <Backdrop id="modal">
-      <ModalContainer>
+    <>
+      <Backdrop
+        id="modal"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      />
+      <ModalContainer
+        initial={{ y: "100%", x: isDesktop ? "-50%" : "0" }}
+        animate={{ y: 0, x: isDesktop ? "-50%" : "0" }}
+        exit={{ y: "100%", x: isDesktop ? "-50%" : "0" }}
+        transition={{ duration: 0.2, type: "spring", bounce: 0 }}
+      >
         <Title>Edit task</Title>
         <ModalBody>
           <TextareaContainer>
@@ -110,7 +127,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
             <Icon icon={PriorityHigh} marginRight />
             <Text>Important</Text>
             <ToggleSwitch active={important}>
-              <div />
+              <motion.div layout />
             </ToggleSwitch>
           </ImportantSwitch>
         </ModalBody>
@@ -119,11 +136,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <ActionButton onClick={handleEditDone}>Done</ActionButton>
         </ActionsContainer>
       </ModalContainer>
-    </Backdrop>
+    </>
   );
 };
 
-const Backdrop = styled.div`
+const Backdrop = styled(motion.div)`
   position: fixed;
   top: 0;
   left: 0;
@@ -134,7 +151,7 @@ const Backdrop = styled.div`
   backdrop-filter: blur(5px);
 `;
 
-const ModalContainer = styled.div`
+const ModalContainer = styled(motion.div)`
   position: fixed;
   background-color: ${({ theme }) => theme.background};
   width: 100%;
@@ -143,6 +160,12 @@ const ModalContainer = styled.div`
   left: 0;
   padding: 20px;
   border-radius: 20px 20px 0 0;
+  z-index: 2;
+
+  @media (min-width: 768px) {
+    max-width: 60%;
+    left: 50%;
+  }
 `;
 
 const Title = styled.h3`
@@ -234,7 +257,7 @@ const ToggleSwitch = styled.div<{ active: boolean }>`
   width: 48px;
   height: 24px;
   border-radius: 60px;
-  transition: all 0.5s ease;
+  transition: background-color 0.5s ease;
 
   & div {
     background-color: ${({ theme }) => theme.accent};
@@ -242,7 +265,6 @@ const ToggleSwitch = styled.div<{ active: boolean }>`
     height: 24px;
     margin-left: ${({ active }) => (active ? "calc(100% - 24px)" : "0")};
     border-radius: 60px;
-    transition: all 0.5s ease;
   }
 `;
 

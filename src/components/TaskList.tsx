@@ -21,7 +21,7 @@ import {
   getDoneTaskListFromDB,
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
-import { compareDates, formatDate, getDayName } from "../data/dates";
+import { compareDates, formatDate } from "../data/dates";
 import EditTaskModal from "./EditTaskModal";
 import {
   getListOfDoneTasks,
@@ -34,6 +34,7 @@ import {
   getIdListOfDoneTasks,
 } from "../data/taskList";
 import { Add } from "@styled-icons/material-outlined";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TaskListProps {
   selectedDay: number;
@@ -65,26 +66,33 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
 
     // If selected day is 0 get done tasks, if day is 1 get days before today and
     // if it is not get tasks from selected day
-    if (selectedDay === 0)
+    if (selectedDay === 0) {
+      if (timeoutID.current) {
+        clearTimeout(timeoutID.current);
+        setTasksInDB(getListOfDoneTasks(taskList));
+      }
       getDoneTaskListFromDB((tasks) => {
         setTaskList(tasks);
       });
-    else if (selectedDay === 1)
+    } else if (selectedDay === 1) {
+      if (timeoutID.current) {
+        clearTimeout(timeoutID.current);
+        getListOfDoneTasks(taskList).length
+          ? setTasksInDB(getListOfDoneTasks(taskList))
+          : setTasksInDB(getListOfNotDoneTasks(taskList));
+      }
       getTaskListFromDB((tasks) => {
         setTaskList(tasks);
       });
-    else
+    } else {
+      if (timeoutID.current) {
+        clearTimeout(timeoutID.current);
+        setTasksInDB(getListOfDoneTasks(taskList));
+      }
       getTaskListByDateFromDB(new Date(selectedDay), (tasks) => {
         setTaskList(tasks);
       });
-
-    return () => {
-      if (timeoutID.current) {
-        clearTimeout(timeoutID.current);
-        if (selectedDay === 0) setTasksInDB(getListOfDoneTasks(taskList));
-        else setTasksInDB(getListOfNotDoneTasks(taskList));
-      }
-    };
+    }
   }, [selectedDay]);
 
   // If there are checked tasks update DB onBeforeUnload
@@ -181,7 +189,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
     setTasksInDB(taskListCopy);
   };
 
-  const handleAddTask: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+  const handleAddTask = () => {
     let taskListCopy = [...taskList];
     const newTask = {
       createdAt: new Date().getTime(),
@@ -276,6 +284,7 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
                           dragHandleProps={provided.dragHandleProps}
                           onClick={() => handleSetTaskDone(+item.id)}
                           onBlur={(text) => handleEditTaskText(text, +item.id)}
+                          onEnterPressed={() => handleAddTask()}
                           handleEditTask={(currentText) => {
                             setEditingTask({ ...item, text: currentText });
                           }}
@@ -293,12 +302,14 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
         </Droppable>
       </DragDropContext>
 
-      {editingTask && (
-        <EditTaskModal
-          editingTask={editingTask}
-          handleClose={handleCloseModal}
-        />
-      )}
+      <AnimatePresence>
+        {editingTask && (
+          <EditTaskModal
+            editingTask={editingTask}
+            handleClose={handleCloseModal}
+          />
+        )}
+      </AnimatePresence>
 
       {selectedDay == 0 ? (
         <ActionBar

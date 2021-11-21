@@ -6,6 +6,7 @@ import {
   ExpandMore,
   ExpandLess,
 } from "@styled-icons/material-outlined";
+import { motion } from "framer-motion";
 import Icon from "./Icon";
 
 interface DaySelectProps {
@@ -39,20 +40,40 @@ const Tabs: React.FC<DaySelectProps> = ({
   return (
     <TabsContainer>
       <TabSelectContainer>
-        <TabButton onClick={handleDoneTab} selected={selectedDay === 0} flexRow>
-          <Icon icon={Done} marginRight={selectedDay === 0} />
-          {selectedDay === 0 && <Title>Done</Title>}
+        <TabButton onClick={handleDoneTab} $selected={selectedDay === 0} layout>
+          <Icon icon={Done} marginRight={selectedDay === 0} layout />
+          {selectedDay === 0 && (
+            <Title initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              Done
+            </Title>
+          )}
         </TabButton>
-        <TabButton onClick={handleAllTasksTab} selected={selectedDay === 1}>
-          <Title>All</Title>
-          <Title>Tasks</Title>
+        <TabButton
+          onClick={handleAllTasksTab}
+          $selected={selectedDay === 1}
+          layout
+        >
+          <Title layout>All</Title>
+          {selectedDay === 1 && (
+            <Title
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              $marginLeft
+            >
+              Tasks
+            </Title>
+          )}
         </TabButton>
         <TabButton
           onClick={handleCalendarTab}
-          selected={!(selectedDay in [0, 1])}
-          flexRow
+          $selected={!(selectedDay in [0, 1])}
+          layout
         >
-          <Icon icon={CalendarToday} marginRight={!(selectedDay in [0, 1])} />
+          <Icon
+            icon={CalendarToday}
+            marginRight={!(selectedDay in [0, 1])}
+            layout
+          />
           {!(selectedDay in [0, 1]) && (
             <Icon icon={showCalendar ? ExpandLess : ExpandMore} marginLeft />
           )}
@@ -88,33 +109,38 @@ const TabSelectContainer = styled.div`
   }
 `;
 
-const TabButton = styled.button<{ selected: boolean; flexRow?: boolean }>`
-  flex: ${({ selected }) => (selected ? 2 : 1)};
+const TabButton = styled(motion.button)<{ $selected: boolean }>`
+  flex: ${({ $selected }) => ($selected ? 2 : 1)};
   display: flex;
-  flex-direction: ${({ flexRow }) => (flexRow ? "row" : "column")};
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme, selected }) =>
-    selected ? theme.accent : theme.main};
+  background-color: ${({ theme, $selected }) =>
+    $selected ? theme.accent : theme.main};
   border: none;
   cursor: pointer;
   border-radius: 20px;
   padding: 16px;
   margin-right: 12px;
   min-width: 70px;
-  transition: all 0.5s ease;
 
   & * {
-    color: ${({ theme, selected }) =>
-      selected ? theme.accentText : theme.text};
+    color: ${({ theme, $selected }) =>
+      $selected ? theme.accentText : theme.text};
+  }
+
+  @media (min-width: 576px) {
+    flex-direction: row;
+    flex: unset;
   }
 `;
 
-const Title = styled.h5`
+const Title = styled(motion.h5)<{ $marginLeft?: boolean }>`
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 1.25px;
   text-transform: uppercase;
+  margin-left: ${({ $marginLeft }) => ($marginLeft ? "5px" : "0")};
 `;
 
 const Day = styled.p`

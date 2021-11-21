@@ -9,12 +9,14 @@ import { formatDate } from "../data/dates";
 import { Task } from "../data/todosDB";
 import Icon from "./Icon";
 import Textarea from "./Textarea";
+import { AnimationControls, motion, useAnimation } from "framer-motion";
 
 interface TaskProps {
   task: Task;
   dragHandleProps: Object;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   onBlur: (arg0: string) => void;
+  onEnterPressed: () => void;
   handleEditTask: (arg0: string) => void;
   activeTaskTextarea: React.MutableRefObject<HTMLTextAreaElement>;
   showDate: boolean;
@@ -25,6 +27,7 @@ const TaskItem: React.FC<TaskProps> = ({
   dragHandleProps,
   onClick,
   onBlur,
+  onEnterPressed,
   handleEditTask,
   activeTaskTextarea,
   showDate,
@@ -76,6 +79,7 @@ const TaskItem: React.FC<TaskProps> = ({
               onBlur(taskText);
               setShowEditButton(false);
             }}
+            onEnterPressed={() => onEnterPressed()}
           />
           <EditTaskContainer show={showEditButton}>
             <EditTaskButton

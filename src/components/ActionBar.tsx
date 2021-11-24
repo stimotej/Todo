@@ -4,41 +4,30 @@ import { StyledIcon } from "@styled-icons/styled-icon";
 import { ChevronLeft } from "@styled-icons/material-outlined";
 import styled from "styled-components";
 import Icon from "./Icon";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ActionBarProps {
-  navigationText?: string;
-  navigationLink?: string;
-  actionText?: string;
+  actionText: string;
   actionIcon?: StyledIcon;
-  handleAction?: React.MouseEventHandler<HTMLButtonElement>;
+  handleAction: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const ActionBar: React.FC<ActionBarProps> = ({
-  navigationText,
-  navigationLink,
   actionText,
   actionIcon,
   handleAction,
 }) => {
   return (
     <ActionBarContainer>
-      {navigationText && (
-        <Button as={Link} to={navigationLink}>
-          <Icon icon={ChevronLeft} margin />
-          {navigationText}
-        </Button>
-      )}
-      {actionText && (
-        <Button onClick={handleAction} alignRight={!navigationText}>
-          {actionIcon && <Icon icon={actionIcon} margin />}
-          {actionText}
-        </Button>
-      )}
+      <Button onClick={handleAction}>
+        {actionIcon && <Icon icon={actionIcon} marginRight />}
+        {actionText}
+      </Button>
     </ActionBarContainer>
   );
 };
 
-const ActionBarContainer = styled.section`
+const ActionBarContainer = styled(motion.section)`
   position: fixed;
   display: flex;
   align-items: center;
@@ -48,18 +37,18 @@ const ActionBarContainer = styled.section`
   width: 100%;
   bottom: 0;
   right: 0;
-  transition: all 0.5s ease;
+  transition: background-color 0.5s ease;
 
   @media (min-width: 768px) {
     padding: 0 calc(20% + 20px);
   }
 `;
 
-const Button = styled.button<{ alignRight?: boolean }>`
+const Button = styled(motion.button)`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: ${({ alignRight }) => (alignRight ? "auto" : "none")};
+  margin-left: auto;
   padding: 16px;
   color: ${({ theme }) => theme.text};
   background-color: transparent;

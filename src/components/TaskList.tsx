@@ -7,7 +7,6 @@ import {
   DropResult,
 } from "react-beautiful-dnd";
 import { useMediaQuery } from "react-responsive";
-import { useBeforeunload } from "react-beforeunload";
 import TaskItem from "../components/TaskItem";
 
 import {
@@ -19,6 +18,7 @@ import {
   addTaskToDB,
   Task,
   getDoneTaskListFromDB,
+  setTaskInDB,
 } from "../data/todosDB";
 import ActionBar from "./ActionBar";
 import { compareDates, formatDate } from "../data/dates";
@@ -32,9 +32,15 @@ import {
   moveTask,
   resetTasksOrder,
   getIdListOfDoneTasks,
+  getListWithoutTask,
 } from "../data/taskList";
 import { Add } from "@styled-icons/material-outlined";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  AnimateSharedLayout,
+  useIsPresent,
+} from "framer-motion";
 
 interface TaskListProps {
   selectedDay: number;
@@ -50,94 +56,61 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
   const taskListRef = useRef(taskList);
   taskListRef.current = taskList;
 
-  // Store timeout id so setTimeout can be cleared
-  let timeoutID = useRef<NodeJS.Timeout>(null);
-
   // True if min-width is 768px
   const isDesktop = useMediaQuery({ query: "(min-width: 768px)" });
 
   // Get ref of current active task item textarea
   const activeTaskTextarea = useRef(null);
 
+  const [animateTaskItemExit, setAnimateTaskItemExit] = useState(false);
+
+  const taskItemVariants = {
+    visible: (i: number) => ({
+      x: 0,
+      opacity: 1,
+      transition: {
+        delay: i * 0.1,
+      },
+    }),
+    hidden: { x: -50, opacity: 0 },
+  };
+
   useEffect(() => {
     // Check if browser supports indexedDB
     !("indexedDB" in window) &&
       alert("Todo app is not supported in this browser");
 
-    // If selected day is 0 get done tasks, if day is 1 get days before today and
-    // if it is not get tasks from selected day
+    setAnimateTaskItemExit(false);
+
+    // If selected day is 0 get done tasks, if day is 1 get days before today
+    // else get tasks from selected day
     if (selectedDay === 0) {
-      if (timeoutID.current) {
-        clearTimeout(timeoutID.current);
-        setTasksInDB(getListOfDoneTasks(taskList));
-      }
       getDoneTaskListFromDB((tasks) => {
         setTaskList(tasks);
+        setAnimateTaskItemExit(true);
       });
     } else if (selectedDay === 1) {
-      if (timeoutID.current) {
-        clearTimeout(timeoutID.current);
-        getListOfDoneTasks(taskList).length
-          ? setTasksInDB(getListOfDoneTasks(taskList))
-          : setTasksInDB(getListOfNotDoneTasks(taskList));
-      }
       getTaskListFromDB((tasks) => {
         setTaskList(tasks);
+        setAnimateTaskItemExit(true);
       });
     } else {
-      if (timeoutID.current) {
-        clearTimeout(timeoutID.current);
-        setTasksInDB(getListOfDoneTasks(taskList));
-      }
       getTaskListByDateFromDB(new Date(selectedDay), (tasks) => {
         setTaskList(tasks);
+        setAnimateTaskItemExit(true);
       });
     }
   }, [selectedDay]);
 
-  // If there are checked tasks update DB onBeforeUnload
-  useBeforeunload(() => {
-    if (timeoutID.current) {
-      clearTimeout(timeoutID.current);
-      setTasksInDB(getListOfDoneTasks(taskList));
-    }
-  });
-
   // Remove task and update state
-  const handleSetTaskDone = (id: number) => {
-    // If timeout is already running clear it
-    timeoutID.current && clearTimeout(timeoutID.current);
+  const handleSetTaskDone = async (id: number) => {
+    const doneTask = toggleTaskDone(taskList, id);
 
-    // Update taskList with task marked as done
-    setTaskList(toggleTaskDone(taskList, id));
-
-    // Check is done tasks tab is selected
-    const isDoneTasksSelected = selectedDay === 0;
-
-    // Get list of tasks marked as done/not done
-    let listOfTasks = isDoneTasksSelected
-      ? getListOfNotDoneTasks(taskList)
-      : getListOfDoneTasks(taskList);
-
-    // Start timeout and after 3s/500ms update state and DB
-    timeoutID.current =
-      listOfTasks.length === 0
-        ? null
-        : setTimeout(
-            () => {
-              setTasksInDB(listOfTasks, () => {
-                // Update taskList to all tasks not marked/marked as done
-                setTaskList(
-                  isDoneTasksSelected
-                    ? getListOfDoneTasks(taskListRef.current)
-                    : getListOfNotDoneTasks(taskListRef.current)
-                );
-                // Clear timeout id
-                timeoutID.current = null;
-              });
-            },
-            isDoneTasksSelected ? 500 : 2000
-          );
+    // Update state and DB
+    setTaskInDB(doneTask, () => {
+      // Update taskList to all tasks not marked/marked as done
+      setTaskList(getListWithoutTask(taskList, doneTask));
+    });
   };
 
   // Callback for editingTask
@@ -263,39 +236,57 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
             <TaskListContainer
               {...provided.droppableProps}
               ref={provided.innerRef}
+              $emptyTaskList={!(selectedDay in [0, 1])}
             >
-              {taskList.length === 0 ? (
-                <TaskListEmptyText>No tasks yet :(</TaskListEmptyText>
-              ) : (
-                taskList.map((item, index) => (
-                  <Draggable
-                    key={+item.id}
-                    draggableId={item.id.toString()}
-                    index={index}
-                  >
-                    {(provided) => (
-                      <div
-                        {...provided.draggableProps}
-                        {...(!isDesktop && provided.dragHandleProps)}
-                        ref={provided.innerRef}
-                      >
-                        <TaskItem
-                          task={item}
-                          dragHandleProps={provided.dragHandleProps}
-                          onClick={() => handleSetTaskDone(+item.id)}
-                          onBlur={(text) => handleEditTaskText(text, +item.id)}
-                          onEnterPressed={() => handleAddTask()}
-                          handleEditTask={(currentText) => {
-                            setEditingTask({ ...item, text: currentText });
-                          }}
-                          activeTaskTextarea={activeTaskTextarea}
-                          showDate={selectedDay === 1}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))
+              {taskList.length === 0 && (
+                <TaskListEmptyText
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { delay: 0.3 } }}
+                >
+                  No tasks yet :(
+                </TaskListEmptyText>
               )}
+              <AnimatePresence>
+                {taskList.map((item, index) => (
+                  <motion.div
+                    key={+item.id}
+                    custom={index}
+                    initial="hidden"
+                    animate="visible"
+                    exit={animateTaskItemExit && "hidden"}
+                    variants={taskItemVariants}
+                  >
+                    <Draggable draggableId={item.id.toString()} index={index}>
+                      {(provided) => (
+                        <div
+                          {...provided.draggableProps}
+                          {...(!isDesktop && provided.dragHandleProps)}
+                          ref={provided.innerRef}
+                        >
+                          <TaskItem
+                            task={item}
+                            dragHandleProps={provided.dragHandleProps}
+                            onClick={() => handleSetTaskDone(+item.id)}
+                            onBlur={(text) =>
+                              handleEditTaskText(text, +item.id)
+                            }
+                            onEnterPressed={() => handleAddTask()}
+                            handleEditTask={(currentText) => {
+                              setEditingTask({
+                                ...item,
+                                text: currentText,
+                              });
+                            }}
+                            activeTaskTextarea={activeTaskTextarea}
+                            showDate={selectedDay === 1}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
               {provided.placeholder}
             </TaskListContainer>
           )}
@@ -311,18 +302,20 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDay }) => {
         )}
       </AnimatePresence>
 
-      {selectedDay == 0 ? (
-        <ActionBar
-          actionText="Delete done tasks"
-          handleAction={handleDeleteDoneTasks}
-        />
-      ) : (
-        <ActionBar
-          actionText="Add task"
-          actionIcon={Add}
-          handleAction={handleAddTask}
-        />
-      )}
+      <AnimateSharedLayout>
+        {selectedDay === 0 ? (
+          <ActionBar
+            actionText="Delete done tasks"
+            handleAction={handleDeleteDoneTasks}
+          />
+        ) : (
+          <ActionBar
+            actionText="Add task"
+            actionIcon={Add}
+            handleAction={handleAddTask}
+          />
+        )}
+      </AnimateSharedLayout>
     </>
   );
 };
@@ -334,16 +327,19 @@ const ListTitle = styled.h3`
   transition: all 0.5s ease;
 `;
 
-const TaskListContainer = styled.ul`
+const TaskListContainer = styled(motion.ul)<{ $emptyTaskList?: boolean }>`
   list-style-type: none;
   padding-bottom: 100px;
+  position: relative;
+  margin-bottom: ${({ $emptyTaskList }) => ($emptyTaskList ? "100px" : "0")};
 `;
 
-const TaskListEmptyText = styled.p`
+const TaskListEmptyText = styled(motion.p)`
   color: ${({ theme }) => theme.textLight};
-  text-align: center;
-  margin-top: 60px;
-  transition: all 0.5s ease;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 `;
 
 export default TaskList;

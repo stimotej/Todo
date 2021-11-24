@@ -6,25 +6,30 @@ import { lightTheme, darkTheme, ThemeType } from "../themes/theme";
 const Layout: React.FC = ({ children }) => {
   const [themeDark, setThemeDark] = useState(false);
 
+  // getOptionsFromDB((options) => {
+  //   if (options) setThemeDark(options.darkTheme);
+  // });
+
   useEffect(() => {
-    getOptionsFromDB((options) => {
-      if (options) setThemeDark(options.darkTheme);
-    });
+    setThemeDark(localStorage.getItem("theme") === "true");
+    // console.log(themeDark);
   }, []);
 
   const handleChangeTheme = () => {
-    const options = {
-      darkTheme: !themeDark,
-    };
-    setOptionsInDB(options, () => {
-      setThemeDark(!themeDark);
-    });
+    // const options = {
+    //   darkTheme: !themeDark,
+    // };
+    // setOptionsInDB(options, () => {
+    //   setThemeDark(!themeDark);
+    // });
+    localStorage.setItem("theme", (!themeDark).toString());
+    setThemeDark(!themeDark);
   };
 
   return (
     <ThemeProvider
       theme={{
-        ...(themeDark ? darkTheme : lightTheme),
+        ...(localStorage.getItem("theme") === "true" ? darkTheme : lightTheme),
         themeDark,
         handleChangeTheme,
       }}
@@ -45,8 +50,16 @@ const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    font-size:100%;
+    font-size: 100%;
     outline: none;
+  }
+
+  .theme-dark {
+    background-color: ${darkTheme.background};
+  }
+
+  .theme-light {
+    background-color: ${lightTheme.background};
   }
 `;
 

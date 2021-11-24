@@ -34,6 +34,7 @@ const TaskItem: React.FC<TaskProps> = ({
 }) => {
   const [showEditButton, setShowEditButton] = useState(false);
 
+  const [done, setDone] = useState(task.done);
   const [taskText, setTaskText] = useState(task.text);
 
   // Task item textarea ref to set focus on add task button click (for safari)
@@ -50,11 +51,16 @@ const TaskItem: React.FC<TaskProps> = ({
     }
   }, [showEditButton]);
 
+  const handleDone = (e) => {
+    setDone(!done);
+    onClick(e);
+  };
+
   return (
     <TaskContainer>
       <CheckboxContainer>
-        <CheckboxButton onClick={onClick}>
-          <Checkbox done={task.done} />
+        <CheckboxButton onClick={handleDone}>
+          <Checkbox $done={task.done} />
         </CheckboxButton>
       </CheckboxContainer>
       <TextContainer>
@@ -66,7 +72,7 @@ const TaskItem: React.FC<TaskProps> = ({
           )}
           <Textarea
             getRef={(ref) => (taskTextarea.current = ref)}
-            done={task.done}
+            done={done}
             value={taskText}
             onFocus={() => {
               activeTaskTextarea.current = taskTextarea.current;
@@ -81,7 +87,7 @@ const TaskItem: React.FC<TaskProps> = ({
             }}
             onEnterPressed={() => onEnterPressed()}
           />
-          <EditTaskContainer show={showEditButton}>
+          <EditTaskContainer $show={showEditButton}>
             <EditTaskButton
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
@@ -113,7 +119,7 @@ const Important = styled.div`
 `;
 
 const CheckboxContainer = styled.div`
-  padding: 8px;
+  padding: 6px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -126,12 +132,12 @@ const CheckboxButton = styled.button`
   cursor: pointer;
 `;
 
-const Checkbox = styled.div<{ done: boolean }>`
-  width: 16px;
-  height: 16px;
+const Checkbox = styled.div<{ $done: boolean }>`
+  width: 18px;
+  height: 18px;
   border: 1.5px solid ${({ theme }) => theme.text};
   border-radius: 50%;
-  background-color: ${({ done, theme }) => (done ? theme.text : "none")};
+  background-color: ${({ $done, theme }) => ($done ? theme.text : "none")};
   transition: all 0.5s ease;
 `;
 
@@ -158,8 +164,8 @@ const TaskDate = styled.p`
   color: ${({ theme }) => theme.textLight};
 `;
 
-const EditTaskContainer = styled.div<{ show: boolean }>`
-  display: ${({ show }) => (show ? "flex" : "none")};
+const EditTaskContainer = styled.div<{ $show: boolean }>`
+  display: ${({ $show }) => ($show ? "flex" : "none")};
   align-items: start;
   justify-content: center;
 `;

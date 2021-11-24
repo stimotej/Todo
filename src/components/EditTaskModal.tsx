@@ -21,18 +21,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
   handleClose,
 }) => {
   useEffect(() => {
-    const modal = document.getElementById("modal");
-
     document.body.style.overflow = "hidden";
 
-    window.onclick = (e: MouseEvent) => {
-      if (e.target === modal) {
-        handleClose(null);
-      }
-    };
-
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.removeProperty("overflow");
     };
   }, []);
 
@@ -84,6 +76,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
+        onClick={handleEditDone}
       />
       <ModalContainer
         initial={{ y: "100%", x: isDesktop ? "-50%" : "0" }}
@@ -126,7 +119,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <ImportantSwitch onClick={() => setImportant(!important)}>
             <Icon icon={PriorityHigh} marginRight />
             <Text>Important</Text>
-            <ToggleSwitch active={important}>
+            <ToggleSwitch $active={important}>
               <motion.div layout />
             </ToggleSwitch>
           </ImportantSwitch>
@@ -141,12 +134,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
 };
 
 const Backdrop = styled(motion.div)`
-  position: fixed;
+  position: absolute;
+  overflow: auto;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 2;
   background-color: ${({ theme }) => theme.backdropColor};
   backdrop-filter: blur(5px);
 `;
@@ -156,11 +150,12 @@ const ModalContainer = styled(motion.div)`
   background-color: ${({ theme }) => theme.background};
   width: 100%;
   height: auto;
+  max-height: 90%;
   bottom: 0;
   left: 0;
   padding: 20px;
   border-radius: 20px 20px 0 0;
-  z-index: 2;
+  z-index: 4;
 
   @media (min-width: 768px) {
     max-width: 60%;
@@ -249,11 +244,11 @@ const ImportantSwitch = styled.div`
   border-radius: 10px;
 `;
 
-const ToggleSwitch = styled.div<{ active: boolean }>`
+const ToggleSwitch = styled.div<{ $active: boolean }>`
   display: flex;
   align-items: center;
-  background-color: ${({ theme, active }) =>
-    active ? theme.success : theme.background};
+  background-color: ${({ theme, $active }) =>
+    $active ? theme.success : theme.background};
   width: 48px;
   height: 24px;
   border-radius: 60px;
@@ -263,7 +258,7 @@ const ToggleSwitch = styled.div<{ active: boolean }>`
     background-color: ${({ theme }) => theme.accent};
     width: 24px;
     height: 24px;
-    margin-left: ${({ active }) => (active ? "calc(100% - 24px)" : "0")};
+    margin-left: ${({ $active }) => ($active ? "calc(100% - 24px)" : "0")};
     border-radius: 60px;
   }
 `;

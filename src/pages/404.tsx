@@ -1,15 +1,16 @@
 import React from "react";
 import { Link } from "gatsby";
 import styled from "styled-components";
+import Layout from "../components/Layout";
 
 const NotFoundPage: React.FC = () => {
   return (
-    <>
+    <Layout>
       <Container>
         <Title>Page not found :(</Title>
         <TodoLink to="/">Open todo</TodoLink>
       </Container>
-    </>
+    </Layout>
   );
 };
 

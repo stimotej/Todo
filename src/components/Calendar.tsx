@@ -78,24 +78,24 @@ const Calendar: React.FC<CalendarProps> = ({
     let firstDayOfMonth = getFirstDayOfMonth();
 
     let props = {
-      today: false,
-      selected: false,
-      active: false,
-      otherMonth: false,
+      $today: false,
+      $selected: false,
+      $active: false,
+      $otherMonth: false,
     };
 
     [...Array(35).keys()].forEach((i) => {
       date = new Date(year, month, i + 1 - firstDayOfMonth + 1);
 
       props = {
-        today: compareDates(date, today),
-        selected: compareDates(date, selectedDate),
-        active:
+        $today: compareDates(date, today),
+        $selected: compareDates(date, selectedDate),
+        $active:
           activeDays &&
           activeDays.filter((day) => compareDates(new Date(day), date)).length
             ? true
             : false,
-        otherMonth: date.getMonth() !== month,
+        $otherMonth: date.getMonth() !== month,
       };
 
       row.push(
@@ -141,12 +141,12 @@ const Calendar: React.FC<CalendarProps> = ({
       </SelectMonthContainer>
       <div ref={tableRef}>
         {selectYear ? (
-          <YearSelectContainer height={tableRef.current.offsetHeight}>
+          <YearSelectContainer $height={tableRef.current.offsetHeight}>
             {years.map((yearItem) => (
               <YearItem key={yearItem}>
                 <YearButton
                   ref={yearItem === year ? selectedYearRef : null}
-                  selected={yearItem === year}
+                  $selected={yearItem === year}
                   onClick={() => handleSelectYear(yearItem)}
                 >
                   {yearItem}
@@ -212,12 +212,12 @@ const MonthButton = styled.button`
   }
 `;
 
-const YearSelectContainer = styled.div<{ height: number }>`
+const YearSelectContainer = styled.div<{ $height: number }>`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
-  max-height: ${({ height }) => height}px;
+  max-height: ${({ $height }) => $height}px;
   overflow-y: auto;
 `;
 
@@ -225,11 +225,12 @@ const YearItem = styled.div`
   padding: 10px;
 `;
 
-const YearButton = styled.button<{ selected: boolean }>`
+const YearButton = styled.button<{ $selected: boolean }>`
   border: none;
-  background-color: ${({ theme, selected }) =>
-    selected ? theme.accent : "transparent"};
-  color: ${({ theme, selected }) => (selected ? theme.accentText : theme.text)};
+  background-color: ${({ theme, $selected }) =>
+    $selected ? theme.accent : "transparent"};
+  color: ${({ theme, $selected }) =>
+    $selected ? theme.accentText : theme.text};
   padding: 8px 16px;
   border-radius: 20px;
   cursor: pointer;
@@ -259,10 +260,10 @@ const TableData = styled.td`
 `;
 
 const DateButton = styled.button<{
-  today: boolean;
-  selected: boolean;
-  active: boolean;
-  otherMonth: boolean;
+  $today: boolean;
+  $selected: boolean;
+  $active: boolean;
+  $otherMonth: boolean;
 }>`
   font-size: 0.875rem;
   font-weight: 400;
@@ -273,20 +274,20 @@ const DateButton = styled.button<{
   border: none;
   cursor: pointer;
   border-radius: 10px;
-  color: ${({ theme, selected, otherMonth }) =>
-    selected ? theme.accentText : otherMonth ? theme.textLight : theme.text};
-  background-color: ${({ theme, selected, today }) =>
-    selected ? theme.accent : today ? theme.main : theme.background};
+  color: ${({ theme, $selected, $otherMonth }) =>
+    $selected ? theme.accentText : $otherMonth ? theme.textLight : theme.text};
+  background-color: ${({ theme, $selected, $today }) =>
+    $selected ? theme.accent : $today ? theme.main : theme.background};
 
   &:hover {
-    background-color: ${({ theme, selected }) =>
-      selected ? theme.accent : theme.main};
+    background-color: ${({ theme, $selected }) =>
+      $selected ? theme.accent : theme.main};
   }
 
   & div {
-    display: ${({ active }) => (active ? "block" : "none")};
+    display: ${({ $active }) => ($active ? "block" : "none")};
     border: 2px solid
-      ${({ theme, selected }) => (selected ? theme.accentText : theme.accent)};
+      ${({ theme, $selected }) => ($selected ? theme.accentText : theme.accent)};
   }
 `;
 

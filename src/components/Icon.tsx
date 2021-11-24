@@ -35,8 +35,8 @@ const Icon: React.FC<IconProps> = ({
     >
       <IconStyled
         as={icon}
-        marginLeft={marginLeft}
-        marginRight={marginRight}
+        $marginLeft={marginLeft}
+        $marginRight={marginRight}
         color={colorLight ? theme.textLight : theme.text}
       />
     </motion.div>
@@ -44,14 +44,14 @@ const Icon: React.FC<IconProps> = ({
 };
 
 const IconStyled = styled.div<{
-  marginLeft: boolean;
-  marginRight: boolean;
+  $marginLeft: boolean;
+  $marginRight: boolean;
 }>`
   background-color: transparent;
   width: 24px;
   height: 24px;
-  margin-left: ${({ marginLeft }) => (marginLeft ? "10px" : "0")};
-  margin-right: ${({ marginRight }) => (marginRight ? "10px" : "0")};
+  margin-left: ${({ $marginLeft }) => ($marginLeft ? "10px" : "0")};
+  margin-right: ${({ $marginRight }) => ($marginRight ? "10px" : "0")};
 `;
 
 export default withTheme(Icon);

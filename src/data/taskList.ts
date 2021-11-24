@@ -10,11 +10,15 @@ export const getListOfNotDoneTasks = (taskList) => {
   return [...taskList].filter((task) => !task.done);
 };
 
+export const getListWithoutTask = (taskList, task) => {
+  return [...taskList].filter((item) => item.id !== task.id);
+};
+
 export const toggleTaskDone = (taskList, id) => {
   let taskListCopy = [...taskList];
   const index = taskListCopy.findIndex((item) => item.id === id);
   taskListCopy[index].done = !taskListCopy[index].done;
-  return taskListCopy;
+  return taskListCopy[index];
 };
 
 export const getTaskListWithoutTask = (taskList, id) => {

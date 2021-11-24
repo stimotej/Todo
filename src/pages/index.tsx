@@ -5,6 +5,7 @@ import TaskList from "../components/TaskList";
 import Header from "../components/Header";
 import Calendar from "../components/Calendar";
 import styled from "styled-components";
+import Layout from "../components/Layout";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAllTaskDates } from "../data/taskList";
 import { getTaskListFromDB } from "../data/todosDB";
@@ -32,7 +33,7 @@ const IndexPage: React.FC = () => {
   }, [showCalendar]);
 
   return (
-    <>
+    <Layout>
       <Header themeButton />
       <Seo title="Todo" />
       <Tabs
@@ -68,7 +69,7 @@ const IndexPage: React.FC = () => {
         )}
       </AnimatePresence>
       <TaskList selectedDay={selectedDay} />
-    </>
+    </Layout>
   );
 };
 

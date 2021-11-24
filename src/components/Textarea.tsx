@@ -35,6 +35,8 @@ const Textarea: React.FC<TextareaProps> = ({
   const textareaAutoHeight = (textarea: HTMLTextAreaElement) => {
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.style.maxHeight = "200px";
+    textarea.style.overflowY = "auto";
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (
@@ -71,7 +73,7 @@ const Textarea: React.FC<TextareaProps> = ({
         placeholder={placeholder}
         value={value}
         spellCheck="false"
-        done={done}
+        $done={done}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onChange={handleChange}
@@ -81,17 +83,16 @@ const Textarea: React.FC<TextareaProps> = ({
   );
 };
 
-const TextInput = styled.textarea<{ done: boolean }>`
+const TextInput = styled.textarea<{ $done: boolean }>`
   width: 100%;
   font-size: 1rem;
   font-weight: 400;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme, $done }) => ($done ? theme.textLight : theme.text)};
   border: none;
   outline: none;
   resize: none;
   overflow: hidden;
   background-color: transparent;
-  text-decoration: ${({ done }) => (done ? "line-through" : "none")};
   transition: all 0.5s ease;
 
   &:focus {

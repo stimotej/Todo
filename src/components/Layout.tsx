@@ -6,30 +6,21 @@ import { lightTheme, darkTheme, ThemeType } from "../themes/theme";
 const Layout: React.FC = ({ children }) => {
   const [themeDark, setThemeDark] = useState(false);
 
-  // getOptionsFromDB((options) => {
-  //   if (options) setThemeDark(options.darkTheme);
-  // });
-
   useEffect(() => {
-    setThemeDark(localStorage.getItem("theme") === "true");
-    // console.log(themeDark);
+    if (typeof window !== "undefined")
+      setThemeDark(localStorage.getItem("theme") === "true");
   }, []);
 
   const handleChangeTheme = () => {
-    // const options = {
-    //   darkTheme: !themeDark,
-    // };
-    // setOptionsInDB(options, () => {
-    //   setThemeDark(!themeDark);
-    // });
-    localStorage.setItem("theme", (!themeDark).toString());
+    if (typeof window !== "undefined")
+      localStorage.setItem("theme", (!themeDark).toString());
     setThemeDark(!themeDark);
   };
 
   return (
     <ThemeProvider
       theme={{
-        ...(localStorage.getItem("theme") === "true" ? darkTheme : lightTheme),
+        ...(themeDark ? darkTheme : lightTheme),
         themeDark,
         handleChangeTheme,
       }}
